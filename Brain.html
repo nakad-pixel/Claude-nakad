@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Sonnet Brain</title>
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #00ff88;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h3>🤖 Claude Sonnet 4 - AI Brain Interface</h3>
+  <div id="output">Thinking...</div>
+
+  <script>
+    const query = new URLSearchParams(window.location.search).get('q');
+
+    async function askClaude(prompt) {
+      try {
+        const result = await puter.ai.chat(prompt, {
+          model: "claude-sonnet-4", // You can also use "claude-3-7-sonnet" for faster replies
+          stream: false
+        });
+        document.getElementById("output").innerText = result.message.content[0].text;
+      } catch (err) {
+        document.getElementById("output").innerText = "❌ Error: " + err.message;
+      }
+    }
+
+    if (query) {
+      askClaude(query);
+    } else {
+      document.getElementById("output").innerText = "❓ Please add ?q=Your+Prompt to the URL.";
+    }
+  </script>
+</body>
+</html>
