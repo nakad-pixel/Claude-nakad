@@ -2,204 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Claude/GPT Agent</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Brain UI</title>
   <style>
-    :root {
-      --bg: #0f0f0f;
-      --fg: #e0e0e0;
-      --accent: #0a84ff;
-      --panel: #1a1a1a;
-      --border: #2a2a2a;
-    }
-    * {
-      box-sizing: border-box;
-    }
     body {
-      font-family: "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      margin: 0;
-      padding: 2rem;
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 20px;
     }
-    #chat-box {
-      max-width: 900px;
+    .container {
+      max-width: 800px;
       margin: auto;
-      padding: 2rem;
-      background: var(--panel);
-      border-radius: 16px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
-    }
-    h2 {
-      margin-top: 0;
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
-    label {
-      font-weight: 500;
-      margin-top: 1rem;
-      display: block;
-    }
-    input, select, textarea, button {
-      margin-top: 0.5rem;
-      width: 100%;
-      padding: 12px;
-      font-size: 1rem;
       background: #222;
-      color: #fff;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
     }
     textarea {
-      min-height: 80px;
-      resize: vertical;
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
     }
-    button {
-      background: var(--accent);
-      border: none;
-      font-weight: 600;
+    select, button {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
       cursor: pointer;
     }
     button:hover {
-      background: #006ee6;
+      background: #444;
     }
-    #response {
+    pre {
+      background: #000;
+      padding: 10px;
       white-space: pre-wrap;
-      background: #111;
-      border-radius: 10px;
-      padding: 1rem;
-      border: 1px solid var(--border);
-      margin-top: 1.5rem;
+      border-radius: 6px;
+      color: #0f0;
     }
-    .history {
-      margin-top: 2rem;
-      background: #121212;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem;
-    }
-    .history-item {
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #333;
-    }
-    .run-btn {
-      background: var(--accent);
-      margin-top: 0.5rem;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      cursor: pointer;
+    .checkbox-group {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div id="chat-box">
-    <h2>Claude/GPT Agent</h2>
+  <div class="container">
+    <h2>Claude + GPT-4o Brain Interface</h2>
+    <textarea id="userPrompt" placeholder="Ask Claude or GPT-4o anything..."></textarea>
 
-    <label>System Prompt Template:</label>
-    <select id="system">
-      <option value="You are a helpful Claude AI that creates workflows and JSON.">Claude: JSON Architect</option>
-      <option value="You are a YouTube growth assistant.">YouTube Agent</option>
-      <option value="You are a professional SEO strategist.">SEO Strategist</option>
-      <option value="You are an n8n automation expert.">n8n Agent</option>
+    <div class="checkbox-group">
+      <input type="checkbox" id="includeSystem" checked /> Include System Prompt
+    </div>
+
+    <label for="modelSelect">Choose Model:</label>
+    <select id="modelSelect">
+      <option value="gpt-4o">GPT-4o (OpenAI)</option>
+      <option value="claude-4-sonnet-20240229">Claude Sonnet 4</option>
+      <option value="claude-4-opus-20240229">Claude Opus 4</option>
     </select>
 
-    <label>Your Prompt:</label>
-    <textarea id="userPrompt" placeholder="Ask Claude or GPT..."></textarea>
+    <button onclick="sendToClaude()">Send</button>
+    <button onclick="addPrompt()">Add Prompt</button>
 
-    <label>Model:</label>
-    <select id="model">
-      <option value="claude-sonnet-4">Claude Sonnet 4</option>
-      <option value="gpt-4o">GPT-4o</option>
-    </select>
-
-    <label>
-      <input type="checkbox" id="autoRun" />
-      Auto-send to n8n Webhook
-    </label>
-
-    <button onclick="sendPrompt()">Send</button>
-
-    <div id="response"></div>
-    <div class="history" id="history"></div>
+    <h3>AI Response:</h3>
+    <pre id="responseOutput"></pre>
   </div>
 
-  <script src="https://js.puter.com/v2/"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(() => {
-        console.log('Service Worker Registered');
-      });
-    }
+    const SYSTEM_PROMPT = `You are an advanced AI assistant.
 
-    async function sendPrompt() {
-      const prompt = document.getElementById("userPrompt").value;
-      const systemPrompt = document.getElementById("system").value;
-      const model = document.getElementById("model").value;
-      const autoRun = document.getElementById("autoRun").checked;
-      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+If the user asks for a blueprint, n8n workflow, or JSON, respond with only valid, importable n8n JSON.
 
-      const resBox = document.getElementById("response");
-      resBox.innerText = "Thinking...";
+If the user is asking a general question or brainstorming, respond in natural language with helpful, intelligent answers.`;
+
+    async function sendToClaude() {
+      const userPrompt = document.getElementById("userPrompt").value.trim();
+      const includeSystem = document.getElementById("includeSystem").checked;
+      const selectedModel = document.getElementById("modelSelect").value;
+      const output = document.getElementById("responseOutput");
+      output.textContent = "Loading...";
+
+      const finalPrompt = includeSystem ? `${SYSTEM_PROMPT}\n\nUser: ${userPrompt}` : userPrompt;
 
       try {
-        const res = await puter.ai.chat(fullPrompt, {
-          model: model,
-          stream: true
+        const res = await fetch("https://puter.com/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: [{ role: "user", content: finalPrompt }]
+          })
         });
 
-        let output = "";
-        for await (const part of res.stream()) {
-          output += part?.delta?.text || "";
-          resBox.innerText = output;
-        }
-
-        saveHistory(prompt, output);
-        if (autoRun) sendToN8n(output);
-
+        const data = await res.json();
+        output.textContent = data.choices?.[0]?.message?.content || "No response from AI.";
       } catch (err) {
-        resBox.innerText = "[Error] " + err.message;
+        output.textContent = "Error: " + err.message;
       }
     }
 
-    function saveHistory(prompt, output) {
-      const history = JSON.parse(localStorage.getItem("chat_history") || "[]");
-      history.unshift({
-        prompt,
-        output,
-        time: new Date().toISOString()
-      });
-      localStorage.setItem("chat_history", JSON.stringify(history));
-      renderHistory();
+    function addPrompt() {
+      const promptText = prompt("Enter a custom system or startup prompt:");
+      if (promptText) {
+        document.getElementById("userPrompt").value = promptText + "\n" + document.getElementById("userPrompt").value;
+      }
     }
-
-    function renderHistory() {
-      const container = document.getElementById("history");
-      const history = JSON.parse(localStorage.getItem("chat_history") || "[]");
-      container.innerHTML = "<h3>Recent</h3>";
-
-      history.slice(0, 5).forEach((entry, i) => {
-        const div = document.createElement("div");
-        div.className = "history-item";
-        div.innerHTML = `<strong>${entry.prompt}</strong><br>${entry.output}<br>
-          <button class="run-btn" onclick="sendToN8n(\`${entry.output.replace(/`/g, '\\`')}\`)">Run in n8n</button>`;
-        container.appendChild(div);
-      });
-    }
-
-    function sendToN8n(responseText) {
-      fetch("http://localhost:5678/webhook-test/ai-agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: responseText })
-      }).then(r => r.text()).then(msg => console.log("n8n response:", msg));
-    }
-
-    renderHistory();
   </script>
 </body>
-  </html>
-  
+</html>
