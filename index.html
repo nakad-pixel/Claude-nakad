@@ -2,148 +2,218 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Brain UI</title>
+  <title>Claude/GPT Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="manifest.json" />
   <style>
+    :root {
+      --bg: #0f0f0f;
+      --fg: #e0e0e0;
+      --accent: #0a84ff;
+      --panel: #1a1a1a;
+      --border: #2a2a2a;
+    }
     body {
-      font-family: sans-serif;
-      background: #111;
-      color: #eee;
-      padding: 20px;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
       margin: 0;
+      padding: 2rem;
     }
-    .container {
-      max-width: 800px;
+    #chat-box {
+      max-width: 900px;
       margin: auto;
-      background: #222;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+      padding: 2rem;
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
     }
-    textarea {
+    h2 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    label {
+      font-weight: 500;
+      margin-top: 1rem;
+      display: block;
+    }
+    input, select, textarea, button {
+      margin-top: 0.5rem;
       width: 100%;
-      height: 150px;
-      padding: 10px;
+      padding: 12px;
       font-size: 1rem;
-      border-radius: 6px;
-      background: #333;
-      color: #eee;
-      border: 1px solid #555;
-      resize: vertical;
+      background: #222;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
     }
-    select, button {
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 1rem;
-      border-radius: 6px;
-      background: #333;
-      color: #eee;
-      border: 1px solid #555;
+    textarea { min-height: 80px; resize: vertical; }
+    button {
+      background: var(--accent);
+      border: none;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    button:hover {
-      background: #444;
-    }
-    pre {
-      background: #000;
-      padding: 10px;
+    button:hover { background: #006ee6; }
+    #response {
       white-space: pre-wrap;
+      background: #111;
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      margin-top: 1.5rem;
+    }
+    .history {
+      margin-top: 2rem;
+      background: #121212;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .history-item {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
+    .run-btn {
+      background: var(--accent);
+      margin-top: 0.5rem;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
       border-radius: 6px;
-      color: #0f0;
-      margin-top: 10px;
+      font-weight: bold;
     }
-    .checkbox-group {
-      margin-top: 10px;
-    }
-    .loading {
-      color: #ffcc00;
-      font-style: italic;
-    }
-    .error {
-      color: #ff5555;
-    }
+    .valid { background: green; color: white; }
+    .invalid { background: red; color: white; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Claude + GPT-4o Brain Interface</h2>
-    <textarea id="userPrompt" placeholder="Ask Claude or GPT-4o anything..." aria-label="User Prompt"></textarea>
+  <div id="chat-box">
+    <h2>Claude/GPT Agent</h2>
 
-    <div class="checkbox-group">
-      <input type="checkbox" id="includeSystem" checked aria-label="Include System Prompt" />
-      <label for="includeSystem">Include System Prompt</label>
-    </div>
-
-    <label for="modelSelect">Choose Model:</label>
-    <select id="modelSelect" aria-label="Model Selection">
-      <option value="gpt-4o">GPT-4o (OpenAI)</option>
-      <option value="claude-4-sonnet-20240229">Claude Sonnet 4</option>
-      <option value="claude-4-opus-20240229">Claude Opus 4</option>
+    <label>System Prompt Template:</label>
+    <select id="system">
+      <option value="You are a helpful Claude AI that creates workflows and JSON.\n\nIf the user asks for a 'blueprint', 'n8n workflow', or 'JSON', respond with only valid, importable n8n JSON. If the user is asking a general question or brainstorming, respond in natural language with helpful, intelligent answers.">Claude: JSON Architect</option>
+      <option value="You are a YouTube growth assistant.">YouTube Agent</option>
+      <option value="You are a professional SEO strategist.">SEO Strategist</option>
+      <option value="You are an n8n automation expert.">n8n Agent</option>
     </select>
 
-    <button onclick="sendToClaude()" aria-label="Send Request">Send</button>
-    <button onclick="addPrompt()" aria-label="Add Custom Prompt">Add Prompt</button>
-    <button onclick="clearInput()" aria-label="Clear Input and Response">Clear</button>
+    <button onclick="addSystemPrompt()">Add Prompt</button>
 
-    <h3>AI Response:</h3>
-    <pre id="responseOutput"></pre>
+    <label>Your Prompt:</label>
+    <textarea id="userPrompt" placeholder="Ask Claude or GPT..."></textarea>
+
+    <label>Model:</label>
+    <select id="model">
+      <option value="claude-sonnet-4">Claude Sonnet 4</option>
+      <option value="claude-opus-4">Claude Opus 4</option>
+      <option value="gpt-4o">GPT-4o</option>
+    </select>
+
+    <label><input type="checkbox" id="useLastAnswer" /> Use Last Answer in Prompt</label>
+
+    <button onclick="sendPrompt()">Send</button>
+
+    <div id="response"></div>
+    <div class="history" id="history"></div>
   </div>
 
+  <script src="https://js.puter.com/v2/ "></script>
   <script>
-    const SYSTEM_PROMPT = `You are an advanced AI assistant.
+    let lastOutput = "";
 
-If the user asks for a blueprint, n8n workflow, or JSON, respond with only valid, importable n8n JSON.
+    function addSystemPrompt() {
+      const prompt = prompt("Enter new system prompt:");
+      if (prompt) {
+        const select = document.getElementById("system");
+        const option = document.createElement("option");
+        option.value = prompt;
+        option.textContent = prompt.slice(0, 40) + (prompt.length > 40 ? "..." : "");
+        select.appendChild(option);
+        select.value = prompt;
+      }
+    }
 
-If the user is asking a general question or brainstorming, respond in natural language with helpful, intelligent answers.`;
+    async function sendPrompt() {
+      let prompt = document.getElementById("userPrompt").value;
+      const systemPrompt = document.getElementById("system").value;
+      const model = document.getElementById("model").value;
+      const useLastAnswer = document.getElementById("useLastAnswer").checked;
 
-    async function sendToClaude() {
-      const userPrompt = document.getElementById("userPrompt").value.trim();
-      const includeSystem = document.getElementById("includeSystem").checked;
-      const selectedModel = document.getElementById("modelSelect").value;
-      const output = document.getElementById("responseOutput");
-      output.textContent = "Loading...";
-      output.className = "loading";
+      if (useLastAnswer && lastOutput) {
+        prompt = `${prompt}\n\nLast Output:\n${lastOutput}`;
+      }
 
-      const finalPrompt = includeSystem ? `${SYSTEM_PROMPT}\n\nUser: ${userPrompt}` : userPrompt;
+      const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+      const resBox = document.getElementById("response");
+      resBox.innerText = "Thinking...";
 
       try {
-        const res = await fetch("https://puter.com/api/chat ", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: selectedModel,
-            messages: [{ role: "user", content: finalPrompt }]
-          })
-        });
+        const res = await puter.ai.chat(fullPrompt, { model, stream: true });
+        if (!res || typeof res.stream !== "function") throw new Error("Invalid AI stream response");
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
+        let output = "";
+        for await (const part of res.stream()) {
+          output += part?.delta?.text || "";
+          resBox.innerText = output;
         }
 
-        const data = await res.json();
-        output.textContent = data.choices?.[0]?.message?.content || "No response from AI.";
-        output.className = "";
+        lastOutput = output;
+        const isValidJSON = validateN8nJSON(output);
+        const badge = document.createElement("span");
+        badge.className = `badge ${isValidJSON ? "valid" : "invalid"}`;
+        badge.innerText = isValidJSON ? "VALID JSON" : "NOT VALID JSON";
+        resBox.appendChild(badge);
+
+        saveHistory(prompt, output);
+
       } catch (err) {
-        output.textContent = "Error: " + err.message;
-        output.className = "error";
+        console.error("[AI Error]", err);
+        resBox.innerText = "[Error] " + (err?.message || "Unknown error");
       }
     }
 
-    function addPrompt() {
-      const promptText = prompt("Enter a custom system or startup prompt:");
-      if (promptText) {
-        document.getElementById("userPrompt").value = promptText + "\n" + document.getElementById("userPrompt").value;
+    function validateN8nJSON(text) {
+      try {
+        const parsed = JSON.parse(text);
+        return parsed && parsed.hasOwnProperty("nodes") && parsed.hasOwnProperty("connections");
+      } catch (e) {
+        return false;
       }
     }
 
-    function clearInput() {
-      document.getElementById("userPrompt").value = "";
-      document.getElementById("responseOutput").textContent = "";
-      document.getElementById("responseOutput").className = "";
+    function saveHistory(prompt, output) {
+      const history = JSON.parse(localStorage.getItem("chat_history") || "[]");
+      history.unshift({ prompt, output, time: new Date().toISOString() });
+      localStorage.setItem("chat_history", JSON.stringify(history));
+      renderHistory();
     }
+
+    function renderHistory() {
+      const container = document.getElementById("history");
+      const history = JSON.parse(localStorage.getItem("chat_history") || "[]");
+      container.innerHTML = "<h3>Recent</h3>";
+
+      history.slice(0, 5).forEach((entry) => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        div.innerHTML = `<strong>${entry.prompt}</strong><br>${entry.output}<br>`;
+        container.appendChild(div);
+      });
+    }
+
+    renderHistory();
   </script>
 </body>
 </html>
