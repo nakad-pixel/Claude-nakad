@@ -1,0 +1,20 @@
+{
+  "name": "Claude/GPT Agent",
+  "short_name": "Agent",
+  "start_url": "/Claude-nakad/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0a84ff",
+  "icons": [
+    {
+      "src": "/Claude-nakad/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Claude-nakad/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
