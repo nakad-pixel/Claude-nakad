@@ -10,6 +10,7 @@
       background: #111;
       color: #eee;
       padding: 20px;
+      margin: 0;
     }
     .container {
       max-width: 800px;
@@ -28,6 +29,7 @@
       background: #333;
       color: #eee;
       border: 1px solid #555;
+      resize: vertical;
     }
     select, button {
       margin-top: 10px;
@@ -38,6 +40,7 @@
       color: #eee;
       border: 1px solid #555;
       cursor: pointer;
+      transition: background 0.3s;
     }
     button:hover {
       background: #444;
@@ -48,30 +51,40 @@
       white-space: pre-wrap;
       border-radius: 6px;
       color: #0f0;
+      margin-top: 10px;
     }
     .checkbox-group {
       margin-top: 10px;
+    }
+    .loading {
+      color: #ffcc00;
+      font-style: italic;
+    }
+    .error {
+      color: #ff5555;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Claude + GPT-4o Brain Interface</h2>
-    <textarea id="userPrompt" placeholder="Ask Claude or GPT-4o anything..."></textarea>
+    <textarea id="userPrompt" placeholder="Ask Claude or GPT-4o anything..." aria-label="User Prompt"></textarea>
 
     <div class="checkbox-group">
-      <input type="checkbox" id="includeSystem" checked /> Include System Prompt
+      <input type="checkbox" id="includeSystem" checked aria-label="Include System Prompt" />
+      <label for="includeSystem">Include System Prompt</label>
     </div>
 
     <label for="modelSelect">Choose Model:</label>
-    <select id="modelSelect">
+    <select id="modelSelect" aria-label="Model Selection">
       <option value="gpt-4o">GPT-4o (OpenAI)</option>
       <option value="claude-4-sonnet-20240229">Claude Sonnet 4</option>
       <option value="claude-4-opus-20240229">Claude Opus 4</option>
     </select>
 
-    <button onclick="sendToClaude()">Send</button>
-    <button onclick="addPrompt()">Add Prompt</button>
+    <button onclick="sendToClaude()" aria-label="Send Request">Send</button>
+    <button onclick="addPrompt()" aria-label="Add Custom Prompt">Add Prompt</button>
+    <button onclick="clearInput()" aria-label="Clear Input and Response">Clear</button>
 
     <h3>AI Response:</h3>
     <pre id="responseOutput"></pre>
@@ -90,11 +103,12 @@ If the user is asking a general question or brainstorming, respond in natural la
       const selectedModel = document.getElementById("modelSelect").value;
       const output = document.getElementById("responseOutput");
       output.textContent = "Loading...";
+      output.className = "loading";
 
       const finalPrompt = includeSystem ? `${SYSTEM_PROMPT}\n\nUser: ${userPrompt}` : userPrompt;
 
       try {
-        const res = await fetch("https://puter.com/api/chat", {
+        const res = await fetch("https://puter.com/api/chat ", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -105,10 +119,16 @@ If the user is asking a general question or brainstorming, respond in natural la
           })
         });
 
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
         const data = await res.json();
         output.textContent = data.choices?.[0]?.message?.content || "No response from AI.";
+        output.className = "";
       } catch (err) {
         output.textContent = "Error: " + err.message;
+        output.className = "error";
       }
     }
 
@@ -117,6 +137,12 @@ If the user is asking a general question or brainstorming, respond in natural la
       if (promptText) {
         document.getElementById("userPrompt").value = promptText + "\n" + document.getElementById("userPrompt").value;
       }
+    }
+
+    function clearInput() {
+      document.getElementById("userPrompt").value = "";
+      document.getElementById("responseOutput").textContent = "";
+      document.getElementById("responseOutput").className = "";
     }
   </script>
 </body>
