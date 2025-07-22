@@ -1,846 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Sonnet 4 Chat - Powered by Puter.js</title>
-    
-    <!-- 
-    BEGINNER EXPLANATION:
-    This meta tag ensures our chat interface works well on mobile devices
-    by controlling the viewport scaling and initial zoom level
-    -->
-    
-    <style>
-        /* 
-        BEGINNER EXPLANATION:
-        CSS Reset and Base Styles
-        We're using modern CSS practices with CSS Grid and Flexbox
-        for responsive design that works on all screen sizes
-        */
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-        }
-        
-        /* 
-        BEGINNER EXPLANATION:
-        Main chat container using CSS Grid for layout
-        This creates a responsive chat interface that adapts to different screen sizes
-        */
-        .chat-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 800px;
-            height: 90vh;
-            max-height: 600px;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        /* Chat Header */
-        .chat-header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .chat-header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .chat-header p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        /* Status indicator */
-        .status-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ef4444;
-            transition: background-color 0.3s ease;
-        }
-        
-        .status-indicator.connected {
-            background: #10b981;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        
-        /* 
-        BEGINNER EXPLANATION:
-        Chat messages area with custom scrollbar
-        This section will contain all the chat messages and handle scrolling
-        */
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        /* Custom scrollbar for webkit browsers */
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
-        /* Message bubbles */
-        .message {
-            max-width: 80%;
-            padding: 15px 20px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            position: relative;
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .message.user {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            align-self: flex-end;
-            margin-left: auto;
-            border-bottom-right-radius: 5px;
-        }
-        
-        .message.assistant {
-            background: white;
-            color: #1f2937;
-            align-self: flex-start;
-            border: 1px solid #e5e7eb;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .message .timestamp {
-            font-size: 0.75rem;
-            opacity: 0.7;
-            margin-top: 5px;
-            display: block;
-        }
-        
-        /* Typing indicator */
-        .typing-indicator {
-            display: none;
-            padding: 15px 20px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 20px;
-            border-bottom-left-radius: 5px;
-            align-self: flex-start;
-            max-width: 80px;
-        }
-        
-        .typing-indicator.show {
-            display: block;
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-        
-        .typing-dots span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #9ca3af;
-            animation: typing 1.4s infinite;
-        }
-        
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
-            30% { transform: translateY(-10px); opacity: 1; }
-        }
-        
-        /* 
-        BEGINNER EXPLANATION:
-        Input area styling with modern form design
-        This creates an attractive and functional input area for users to type messages
-        */
-        .chat-input {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        
-        .input-group {
-            flex: 1;
-            position: relative;
-        }
-        
-        .chat-input textarea {
-            width: 100%;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 12px 15px;
-            font-size: 1rem;
-            font-family: inherit;
-            resize: none;
-            outline: none;
-            transition: border-color 0.3s ease;
-            max-height: 120px;
-            min-height: 48px;
-        }
-        
-        .chat-input textarea:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-        
-        .send-button {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-        
-        .send-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-        
-        .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        /* Error message styling */
-        .error-message {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #fecaca;
-            margin: 10px 20px;
-            font-size: 0.9rem;
-        }
-        
-        /* Welcome message */
-        .welcome-message {
-            text-align: center;
-            color: #6b7280;
-            padding: 40px 20px;
-            font-style: italic;
-        }
-        
-        .welcome-message .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        /* Responsive design for mobile devices */
-        @media (max-width: 768px) {
-            body {
-                padding: 0;
-            }
-            
-            .chat-container {
-                height: 100vh;
-                max-height: none;
-                border-radius: 0;
-                max-width: none;
-            }
-            
-            .chat-header h1 {
-                font-size: 1.25rem;
-            }
-            
-            .chat-messages {
-                padding: 15px;
-                gap: 10px;
-            }
-            
-            .message {
-                max-width: 90%;
-                padding: 12px 16px;
-            }
-            
-            .chat-input {
-                padding: 15px;
-            }
-            
-            .send-button {
-                padding: 12px 16px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .chat-header {
-                padding: 15px;
-            }
-            
-            .chat-header h1 {
-                font-size: 1.1rem;
-            }
-            
-            .chat-header p {
-                font-size: 0.8rem;
-            }
-            
-            .message {
-                padding: 10px 14px;
-                font-size: 0.9rem;
-            }
-            
-            .send-button {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Chat UI with Puter.js</title>
+  <!-- ✅ Load Puter.js SDK -->
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    /* ✅ Responsive, clean styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    .chat-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #4a90e2;
+      color: white;
+      padding: 16px;
+      font-size: 1.2em;
+    }
+    .chat-log {
+      padding: 16px;
+      height: 300px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ddd;
+    }
+    .chat-input {
+      display: flex;
+      padding: 16px;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .chat-input button {
+      margin-left: 8px;
+      padding: 10px 16px;
+      font-size: 1em;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chat-input button:hover {
+      background: #357ab8;
+    }
+    .message {
+      margin-bottom: 12px;
+    }
+    .user {
+      font-weight: bold;
+      color: #333;
+    }
+    .ai {
+      font-weight: bold;
+      color: #4a90e2;
+    }
+  </style>
 </head>
 <body>
-    <!-- 
-    BEGINNER EXPLANATION:
-    Main HTML structure for the chat interface
-    We use semantic HTML5 elements and proper accessibility attributes
-    -->
-    <div class="chat-container">
-        <!-- Chat Header with status indicator -->
-        <div class="chat-header">
-            <h1>Claude Sonnet 4 Chat</h1>
-            <p>Powered by Puter.js • Free & Open Source</p>
-            <div class="status-indicator" id="statusIndicator" title="Connection Status"></div>
-        </div>
-        
-        <!-- Chat Messages Area -->
-        <div class="chat-messages" id="chatMessages">
-            <div class="welcome-message">
-                <span class="icon">🤖</span>
-                <p>Welcome to Claude Sonnet 4 Chat!</p>
-                <p>Start a conversation by typing a message below.</p>
-            </div>
-        </div>
-        
-        <!-- Chat Input Area -->
-        <div class="chat-input">
-            <div class="input-group">
-                <textarea 
-                    id="messageInput" 
-                    placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
-                    rows="1"
-                    aria-label="Message input"
-                ></textarea>
-            </div>
-            <button 
-                id="sendButton" 
-                class="send-button" 
-                type="button"
-                aria-label="Send message"
-            >
-                Send
-            </button>
-        </div>
+  <div class="chat-container">
+    <div class="chat-header">Claude Chat (Powered by Puter.js)</div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
     </div>
+  </div>
 
-    <!-- 
-    BEGINNER EXPLANATION:
-    Load Puter.js SDK from CDN
-    This single script gives us access to AI, cloud storage, auth, and more
-    No API keys or configuration needed!
-    -->
-    <script src="https://js.puter.com/v2/"></script>
-    
-    <script>
-        /*
-        BEGINNER EXPLANATION:
-        JavaScript Class-based Architecture for Chat Application
-        This creates a modular, maintainable chat application using modern ES6+ features
-        */
-        
-        class ClaudeChatApp {
-            constructor() {
-                // Initialize DOM elements and event listeners
-                this.initializeElements();
-                this.initializeEventListeners();
-                this.initializePuter();
-                
-                // Chat state management
-                this.isLoading = false;
-                this.conversationHistory = [];
-                
-                console.log('Claude Chat App initialized successfully!');
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Initialize DOM elements - we store references to HTML elements
-            for better performance and cleaner code
-            */
-            initializeElements() {
-                this.chatMessages = document.getElementById('chatMessages');
-                this.messageInput = document.getElementById('messageInput');
-                this.sendButton = document.getElementById('sendButton');
-                this.statusIndicator = document.getElementById('statusIndicator');
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Set up event listeners for user interactions
-            We handle both click events and keyboard events for better UX
-            */
-            initializeEventListeners() {
-                // Send button click event
-                this.sendButton.addEventListener('click', () => {
-                    this.handleSendMessage();
-                });
-                
-                // Enter key to send message (Shift+Enter for new line)
-                this.messageInput.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        this.handleSendMessage();
-                    }
-                });
-                
-                // Auto-resize textarea as user types
-                this.messageInput.addEventListener('input', () => {
-                    this.autoResizeTextarea();
-                });
-                
-                // Focus on input when page loads
-                window.addEventListener('load', () => {
-                    this.messageInput.focus();
-                });
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Initialize Puter.js and check connection
-            Puter.js handles authentication automatically when needed
-            */
-            async initializePuter() {
-                try {
-                    // Test Puter.js connection
-                    console.log('Initializing Puter.js...');
-                    
-                    // Check if puter is available
-                    if (typeof puter === 'undefined') {
-                        throw new Error('Puter.js not loaded. Please check your internet connection.');
-                    }
-                    
-                    // Update connection status
-                    this.updateConnectionStatus(true);
-                    console.log('Puter.js initialized successfully!');
-                    
-                    // Remove welcome message after successful initialization
-                    this.removeWelcomeMessage();
-                    
-                } catch (error) {
-                    console.error('Failed to initialize Puter.js:', error);
-                    this.updateConnectionStatus(false);
-                    this.showError('Failed to connect to Puter.js. Please refresh the page and try again.');
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Handle sending messages - this is the main function that processes user input
-            and gets responses from Claude Sonnet 4 via Puter.js
-            */
-            async handleSendMessage() {
-                const message = this.messageInput.value.trim();
-                
-                // Validate input
-                if (!message) {
-                    this.messageInput.focus();
-                    return;
-                }
-                
-                // Prevent spam/double sending
-                if (this.isLoading) {
-                    return;
-                }
-                
-                try {
-                    // Clear input and disable send button
-                    this.messageInput.value = '';
-                    this.autoResizeTextarea();
-                    this.setLoading(true);
-                    
-                    // Add user message to chat
-                    this.addMessage(message, 'user');
-                    
-                    // Show typing indicator
-                    this.showTypingIndicator();
-                    
-                    // Send message to Claude Sonnet 4 via Puter.js
-                    await this.sendToClaude(message);
-                    
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    this.showError('Failed to send message. Please try again.');
-                } finally {
-                    // Re-enable interface
-                    this.setLoading(false);
-                    this.hideTypingIndicator();
-                    this.messageInput.focus();
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Send message to Claude Sonnet 4 using Puter.js AI chat function
-            This demonstrates how easy it is to integrate AI with Puter.js!
-            */
-            async sendToClaude(message) {
-                try {
-                    console.log('Sending message to Claude Sonnet 4:', message);
-                    
-                    // Add message to conversation history for context
-                    this.conversationHistory.push({
-                        role: 'user',
-                        content: message
-                    });
-                    
-                    /*
-                    BEGINNER EXPLANATION:
-                    Using Puter.js AI chat function with Claude Sonnet 3.7
-                    Note: The documentation shows Claude 3.7 Sonnet is available
-                    We specify the model and pass the conversation history for context
-                    */
-                    const response = await puter.ai.chat(
-                        this.conversationHistory,
-                        {
-                            model: 'claude-3.7-sonnet', // Using Claude Sonnet 3.7 (latest available)
-                            stream: false // Set to true for streaming responses if preferred
-                        }
-                    );
-                    
-                    // Handle the response
-                    if (response && response.message && response.message.content) {
-                        const assistantMessage = response.message.content;
-                        
-                        // Add Claude's response to conversation history
-                        this.conversationHistory.push({
-                            role: 'assistant',
-                            content: assistantMessage
-                        });
-                        
-                        // Add assistant message to chat UI
-                        this.addMessage(assistantMessage, 'assistant');
-                        
-                        console.log('Successfully received response from Claude');
-                        
-                    } else {
-                        throw new Error('Invalid response format from Claude');
-                    }
-                    
-                } catch (error) {
-                    console.error('Claude API Error:', error);
-                    
-                    // Remove the user message from history if Claude failed to respond
-                    this.conversationHistory.pop();
-                    
-                    // Show user-friendly error message
-                    let errorMessage = 'Sorry, I encountered an error while processing your message.';
-                    
-                    if (error.message.includes('auth')) {
-                        errorMessage = 'Authentication required. Please sign in to continue chatting.';
-                        // Trigger sign-in process
-                        try {
-                            await puter.auth.signIn();
-                            // Retry the message after sign-in
-                            await this.sendToClaude(message);
-                            return;
-                        } catch (authError) {
-                            errorMessage = 'Sign-in failed. Please try again.';
-                        }
-                    } else if (error.message.includes('rate limit')) {
-                        errorMessage = 'Too many requests. Please wait a moment and try again.';
-                    } else if (error.message.includes('network')) {
-                        errorMessage = 'Network error. Please check your connection and try again.';
-                    }
-                    
-                    this.addMessage(errorMessage, 'assistant', true);
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Add a message to the chat interface with proper formatting and animation
-            This function handles both user and assistant messages
-            */
-            addMessage(content, sender, isError = false) {
-                // Remove welcome message if it exists
-                this.removeWelcomeMessage();
-                
-                // Create message element
-                const messageElement = document.createElement('div');
-                messageElement.className = `message ${sender}`;
-                
-                if (isError) {
-                    messageElement.style.background = '#fef2f2';
-                    messageElement.style.color = '#dc2626';
-                    messageElement.style.border = '1px solid #fecaca';
-                }
-                
-                // Add message content with timestamp
-                const timestamp = new Date().toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                
-                messageElement.innerHTML = `
-                    <div class="content">${this.escapeHtml(content)}</div>
-                    <span class="timestamp">${timestamp}</span>
-                `;
-                
-                // Add to chat messages
-                this.chatMessages.appendChild(messageElement);
-                
-                // Scroll to bottom with smooth animation
-                this.scrollToBottom();
-                
-                console.log(`Added ${sender} message:`, content);
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Security function to prevent XSS attacks by escaping HTML characters
-            This is essential when displaying user input or AI responses
-            */
-            escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML.replace(/\n/g, '<br>');
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Show/hide typing indicator for better user experience
-            This gives visual feedback that the AI is processing the request
-            */
-            showTypingIndicator() {
-                const typingIndicator = document.createElement('div');
-                typingIndicator.className = 'typing-indicator show';
-                typingIndicator.id = 'typingIndicator';
-                typingIndicator.innerHTML = `
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                `;
-                
-                this.chatMessages.appendChild(typingIndicator);
-                this.scrollToBottom();
-            }
-            
-            hideTypingIndicator() {
-                const typingIndicator = document.getElementById('typingIndicator');
-                if (typingIndicator) {
-                    typingIndicator.remove();
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Auto-resize textarea as user types for better UX
-            This prevents the need for manual resizing and keeps the interface clean
-            */
-            autoResizeTextarea() {
-                this.messageInput.style.height = 'auto';
-                this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Smooth scroll to bottom of chat when new messages arrive
-            This ensures users always see the latest messages
-            */
-            scrollToBottom() {
-                requestAnimationFrame(() => {
-                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-                });
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Loading state management for better user feedback
-            Disables input while processing to prevent spam
-            */
-            setLoading(loading) {
-                this.isLoading = loading;
-                this.sendButton.disabled = loading;
-                this.messageInput.disabled = loading;
-                
-                if (loading) {
-                    this.sendButton.textContent = 'Sending...';
-                } else {
-                    this.sendButton.textContent = 'Send';
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Update connection status indicator in the header
-            Provides visual feedback about the app's connection state
-            */
-            updateConnectionStatus(connected) {
-                if (connected) {
-                    this.statusIndicator.classList.add('connected');
-                    this.statusIndicator.title = 'Connected to Puter.js';
-                } else {
-                    this.statusIndicator.classList.remove('connected');
-                    this.statusIndicator.title = 'Disconnected from Puter.js';
-                }
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Show error messages to users in a user-friendly way
-            This helps users understand what went wrong and what they can do
-            */
-            showError(message) {
-                const errorElement = document.createElement('div');
-                errorElement.className = 'error-message';
-                errorElement.textContent = message;
-                
-                // Insert at the top of chat messages
-                this.chatMessages.insertBefore(errorElement, this.chatMessages.firstChild);
-                
-                // Auto-remove after 10 seconds
-                setTimeout(() => {
-                    if (errorElement.parentNode) {
-                        errorElement.remove();
-                    }
-                }, 10000);
-            }
-            
-            /*
-            BEGINNER EXPLANATION:
-            Remove welcome message when chat starts
-            Keeps the interface clean and focused on the conversation
-            */
-            removeWelcomeMessage() {
-                const welcomeMessage = this.chatMessages.querySelector('.welcome-message');
-                if (welcomeMessage) {
-                    welcomeMessage.remove();
-                }
-            }
-        }
-        
-        /*
-        BEGINNER EXPLANATION:
-        Initialize the chat app when the page loads
-        We wait for both the DOM and Puter.js to be ready
-        */
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if Puter.js is loaded
-            if (typeof puter === 'undefined') {
-                console.error('Puter.js not loaded! Please check your internet connection.');
-                return;
-            }
-            
-            // Initialize the chat application
-            window.claudeChat = new ClaudeChatApp();
-        });
-        
-        /*
-        BEGINNER EXPLANATION:
-        Error handling for any uncaught errors in the application
-        This helps with debugging and provides user feedback
-        */
-        window.addEventListener('error', (event) => {
-            console.error('Application Error:', event.error);
-            
-            // Show user-friendly error message
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'error-message';
-            errorMessage.textContent = 'An unexpected error occurred. Please refresh the page and try again.';
-            
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.appendChild(errorMessage);
-            }
-        });
-        
-        /*
-        BEGINNER EXPLANATION:
-        Handle offline/online events for better user experience
-        This shows users when they're offline and can't send messages
-        */
-        window.addEventListener('online', () => {
-            console.log('Connection restored');
-            const statusIndicator = document.getElementById('statusIndicator');
-            if (statusIndicator && window.claudeChat) {
-                window.claudeChat.updateConnectionStatus(true);
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            console.log('Connection lost');
-            const statusIndicator = document.getElementById('statusIndicator');
-            if (statusIndicator && window.claudeChat) {
-                window.claudeChat.updateConnectionStatus(false);
-            }
-        });
-    </script>
+  <script>
+    // ✅ Reference to chat log container
+    const chatLog = document.getElementById("chatLog");
+
+    // ✅ Function to append messages to chat log
+    function appendMessage(sender, text) {
+      const message = document.createElement("div");
+      message.className = "message";
+      message.innerHTML = `<span class="${sender}">${sender === 'user' ? 'You' : 'Claude'}:</span> ${text}`;
+      chatLog.appendChild(message);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // ✅ Main function to send message using Puter.js
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const userText = input.value.trim();
+
+      if (!userText) return;
+
+      appendMessage("user", userText);
+      input.value = "";
+
+      try {
+        // ✅ Claude Sonnet 4 via Puter.js (frontend-only)
+        const response = await puter.ai.chat(userText);
+        appendMessage("ai", response);
+      } catch (error) {
+        console.error("Error:", error);
+        appendMessage("ai", "⚠️ Sorry, something went wrong. Please try again.");
+      }
+    }
+  </script>
 </body>
 </html>
