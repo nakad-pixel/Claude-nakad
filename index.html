@@ -1,120 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- ... existing head content ... -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Sonnet Brain</title>
   <script src="https://js.puter.com/v2/"></script>
   <style>
-    /* ... existing styles ... */
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #00ff88;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <!-- ... existing body content ... -->
+  <h3>🤖 Claude Sonnet 4 - AI Brain Interface</h3>
+  <div id="output">Thinking...</div>
 
   <script>
-    // ... existing variables ...
+    const query = new URLSearchParams(window.location.search).get('q');
 
-    async function sendMessage() {
-      if (isSending) return;
-      
-      const text = input.value.trim();
-      if (!text) return;
-
-      isSending = true;
-      sendBtn.disabled = true;
-      input.disabled = true;
-
-      addMessage("user", text);
-      conversationHistory.push({ role: "user", content: text });
-      
-      input.value = "";
-      input.style.height = 'auto';
-      
-      updateStatus("Claude is thinking...", "sending");
-      const thinkingMsg = addMessage("assistant", "typing");
-
+    async function askClaude(prompt) {
       try {
-        // FIX 1: Ensure user is authenticated
-        if (!puter.auth.isSignedIn()) {
-          await puter.auth.signIn();
-        }
-
-        // FIX 2: Correct API call format
-        const response = await puter.ai.chat({
-          messages: conversationHistory,
-          model: "claude-3-sonnet-20240229",
-          max_tokens: 1024,
-          stream: true, // Enable streaming
-          onMessage: (partialResponse) => {
-            // FIX 3: Handle streaming response
-            if (thinkingMsg && partialResponse.content) {
-              thinkingMsg.textContent = partialResponse.content;
-              chat.scrollTop = chat.scrollHeight;
-            }
-          }
+        const result = await puter.ai.chat(prompt, {
+          model: "claude-sonnet-4", // You can also use "claude-3-7-sonnet" for faster replies
+          stream: false
         });
-
-        // FIX 4: Handle final response
-        conversationHistory.push({ 
-          role: "assistant", 
-          content: thinkingMsg.textContent 
-        });
-        
-        updateStatus("Connected to Claude via Puter ✅", "connected");
-        isConnected = true;
-
+        document.getElementById("output").innerText = result.message.content[0].text;
       } catch (err) {
-        console.error("Error:", err);
-        
-        if (thinkingMsg) thinkingMsg.remove();
-        
-        let errorMsg = "Sorry, I encountered an error. ";
-        if (err.message?.includes('timeout')) {
-          errorMsg += "Request timed out. Please try again.";
-        } else if (err.message?.includes('authentication')) {
-          errorMsg += "Authentication failed. Please refresh and try again.";
-        } else if (err.message?.includes('limit')) {
-          errorMsg += "Rate limit exceeded. Please wait a moment.";
-        } else {
-          errorMsg += "Please try again later.";
-        }
-        
-        addMessage("assistant", errorMsg);
-        updateStatus("⚠️ Error occurred", "error");
-      } finally {
-        isSending = false;
-        sendBtn.disabled = false;
-        input.disabled = false;
-        input.focus();
+        document.getElementById("output").innerText = "❌ Error: " + err.message;
       }
     }
 
-    // ... existing functions ...
-
-    // Initialize the app
-    window.addEventListener('load', async () => {
-      try {
-        updateStatus("Initializing via Puter...", "");
-        
-        // FIX 5: Remove auth:'none' for proper initialization
-        await puter.init({
-          appId: 'claude-chat',
-          appName: 'Claude Chat'
-        });
-        
-        isConnected = true;
-        updateStatus("Connected to Claude via Puter ✅", "connected");
-        addMessage("assistant", "👋 Hello! I'm Claude, an AI assistant. How can I help you today?");
-        
-        input.focus();
-        
-      } catch (err) {
-        console.error("Initialization failed:", err);
-        addMessage("assistant", "❌ Failed to connect. Error: " + err.message);
-        updateStatus("❌ Connection failed", "error");
-      }
-    });
-
-    // ... other event listeners ...
+    if (query) {
+      askClaude(query);
+    } else {
+      document.getElementById("output").innerText = "❓ Please add ?q=Your+Prompt to the URL.";
+    }
   </script>
 </body>
 </html>
