@@ -1,296 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Claude Chat (Mobile Optimized)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- ... existing head content ... -->
   <script src="https://js.puter.com/v2/"></script>
   <style>
-    * { 
-      box-sizing: border-box; 
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    body { 
-      background: #111; 
-      color: #fff; 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      height: 100vh;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-    
-    .chat-container {
-      padding: 10px;
-      height: calc(100vh - 120px);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      padding-bottom: 20px;
-      scroll-behavior: smooth;
-    }
-    
-    .message {
-      margin: 8px 0;
-      padding: 12px 16px;
-      border-radius: 18px;
-      max-width: 85%;
-      word-wrap: break-word;
-      line-height: 1.4;
-      white-space: pre-wrap;
-      animation: fadeIn 0.3s ease;
-    }
-    
-    .user { 
-      background: linear-gradient(135deg, #0066cc, #004499);
-      margin-left: auto; 
-      color: white;
-    }
-    
-    .assistant { 
-      background: #333; 
-      margin-right: auto; 
-      border: 1px solid #444;
-    }
-    
-    .input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: #000;
-      padding: 12px;
-      border-top: 1px solid #333;
-      gap: 10px;
-      align-items: flex-end;
-    }
-    
-    #input {
-      flex: 1;
-      background: #222;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 24px;
-      padding: 12px 16px;
-      font-size: 16px;
-      resize: none;
-      min-height: 20px;
-      max-height: 120px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    
-    #input:focus {
-      outline: none;
-      border-color: #0066cc;
-      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
-    }
-    
-    #send-btn {
-      background: linear-gradient(135deg, #0066cc, #004499);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 24px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      min-width: 60px;
-      height: 48px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    #send-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-    }
-    
-    #send-btn:disabled {
-      background: #444;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-      opacity: 0.7;
-    }
-    
-    .status {
-      text-align: center;
-      font-size: 13px;
-      background: #000;
-      color: #aaa;
-      padding: 8px;
-      border-bottom: 1px solid #333;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      transition: color 0.3s;
-    }
-    
-    .status.connected { color: #4CAF50; }
-    .status.error { color: #f44336; }
-    .status.sending { color: #ff9800; }
-    
-    .typing-indicator {
-      display: inline-block;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    
-    .typing-dots {
-      display: inline-flex;
-      gap: 3px;
-    }
-    
-    .typing-dots span {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: #aaa;
-      border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out both;
-    }
-    
-    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-    
-    .clear-btn {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      background: rgba(255,255,255,0.1);
-      color: #aaa;
-      border: none;
-      border-radius: 16px;
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      z-index: 20;
-    }
-    
-    .clear-btn:hover {
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1.0); }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* Mobile optimizations */
-    @media (max-width: 480px) {
-      .message {
-        max-width: 90%;
-        font-size: 15px;
-      }
-      
-      .input-area {
-        padding: 8px;
-      }
-      
-      #input {
-        font-size: 16px;
-        padding: 10px 14px;
-      }
-      
-      #send-btn {
-        padding: 10px 16px;
-        height: 44px;
-      }
-      
-      .chat-container {
-        padding-bottom: 15px;
-      }
-    }
-    
-    /* Scrollbar styling */
-    .chat-container::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .chat-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    .chat-container::-webkit-scrollbar-thumb {
-      background: #444;
-      border-radius: 3px;
-    }
-    
-    .chat-container::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
+    /* ... existing styles ... */
   </style>
 </head>
 <body>
-  <button class="clear-btn" id="clear-btn">Clear Chat</button>
-  <div class="status" id="status">Initializing Claude via Puter...</div>
-  <div class="chat-container" id="chat"></div>
-  <div class="input-area">
-    <textarea id="input" placeholder="Ask Claude..." rows="1"></textarea>
-    <button id="send-btn">Send</button>
-  </div>
+  <!-- ... existing body content ... -->
 
   <script>
-    const chat = document.getElementById("chat");
-    const input = document.getElementById("input");
-    const status = document.getElementById("status");
-    const sendBtn = document.getElementById("send-btn");
-    const clearBtn = document.getElementById("clear-btn");
-    
-    let isConnected = false;
-    let conversationHistory = [];
-    let isSending = false;
-
-    function updateStatus(message, type = '') {
-      status.textContent = message;
-      status.className = `status ${type}`;
-    }
-
-    function addMessage(role, content) {
-      const div = document.createElement("div");
-      div.className = `message ${role}`;
-      
-      if (role === 'assistant' && content === 'typing') {
-        div.innerHTML = `
-          <div class="typing-indicator">
-            Claude is typing
-            <span class="typing-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </div>
-        `;
-      } else {
-        div.textContent = content;
-      }
-      
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-      return div;
-    }
-
-    function autoResize() {
-      input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-    }
+    // ... existing variables ...
 
     async function sendMessage() {
       if (isSending) return;
@@ -312,28 +33,30 @@
       const thinkingMsg = addMessage("assistant", "typing");
 
       try {
-        // Using Puter.js for Claude API integration
+        // FIX 1: Ensure user is authenticated
+        if (!puter.auth.isSignedIn()) {
+          await puter.auth.signIn();
+        }
+
+        // FIX 2: Correct API call format
         const response = await puter.ai.chat({
           messages: conversationHistory,
           model: "claude-3-sonnet-20240229",
           max_tokens: 1024,
-          onProgress: (partialResponse) => {
-            // Update message as Claude types
-            if (thinkingMsg && partialResponse) {
-              thinkingMsg.textContent = partialResponse;
+          stream: true, // Enable streaming
+          onMessage: (partialResponse) => {
+            // FIX 3: Handle streaming response
+            if (thinkingMsg && partialResponse.content) {
+              thinkingMsg.textContent = partialResponse.content;
               chat.scrollTop = chat.scrollHeight;
             }
           }
         });
 
-        // Update with final response
-        if (thinkingMsg) {
-          thinkingMsg.textContent = response.message || response;
-        }
-        
+        // FIX 4: Handle final response
         conversationHistory.push({ 
           role: "assistant", 
-          content: response.message || response 
+          content: thinkingMsg.textContent 
         });
         
         updateStatus("Connected to Claude via Puter ✅", "connected");
@@ -342,18 +65,17 @@
       } catch (err) {
         console.error("Error:", err);
         
-        // Remove thinking message
         if (thinkingMsg) thinkingMsg.remove();
         
         let errorMsg = "Sorry, I encountered an error. ";
-        if (err.message.includes('timeout')) {
+        if (err.message?.includes('timeout')) {
           errorMsg += "Request timed out. Please try again.";
-        } else if (err.message.includes('invalid')) {
-          errorMsg += "Invalid request. Please try a different question.";
-        } else if (err.message.includes('limit')) {
+        } else if (err.message?.includes('authentication')) {
+          errorMsg += "Authentication failed. Please refresh and try again.";
+        } else if (err.message?.includes('limit')) {
           errorMsg += "Rate limit exceeded. Please wait a moment.";
         } else {
-          errorMsg += `${err.message || "Please try again later."}`;
+          errorMsg += "Please try again later.";
         }
         
         addMessage("assistant", errorMsg);
@@ -366,36 +88,17 @@
       }
     }
 
-    function clearChat() {
-      chat.innerHTML = '';
-      conversationHistory = [];
-      addMessage("assistant", "👋 Hello! I'm Claude, an AI assistant. How can I help you today?");
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    // Event listeners
-    input.addEventListener("input", autoResize);
-    
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    
-    sendBtn.addEventListener("click", sendMessage);
-    clearBtn.addEventListener("click", clearChat);
+    // ... existing functions ...
 
     // Initialize the app
     window.addEventListener('load', async () => {
       try {
         updateStatus("Initializing via Puter...", "");
         
-        // Initialize Puter
+        // FIX 5: Remove auth:'none' for proper initialization
         await puter.init({
           appId: 'claude-chat',
-          appName: 'Claude Chat',
-          auth: 'none'
+          appName: 'Claude Chat'
         });
         
         isConnected = true;
@@ -406,15 +109,12 @@
         
       } catch (err) {
         console.error("Initialization failed:", err);
-        addMessage("assistant", "❌ Failed to connect. Please check your internet connection and try refreshing the page.");
+        addMessage("assistant", "❌ Failed to connect. Error: " + err.message);
         updateStatus("❌ Connection failed", "error");
       }
     });
 
-    // Handle window resize for mobile
-    window.addEventListener('resize', () => {
-      chat.scrollTop = chat.scrollHeight;
-    });
+    // ... other event listeners ...
   </script>
 </body>
 </html>
