@@ -2,103 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Claude Sonnet 4 Chat</title>
+  <title>Claude Chat - Fixed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://js.puter.com/v2/"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      background: #1a1a1a;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .status {
-      text-align: center;
-      padding: 8px;
-      font-size: 14px;
-      background: #111;
-    }
-    .chat-container {
-      height: 80vh;
-      overflow-y: auto;
-      padding: 15px;
-      background: #222;
-      border-radius: 8px;
-      margin: 10px;
-      display: flex;
-      flex-direction: column;
-    }
-    .message {
-      max-width: 85%;
-      margin: 8px 0;
-      padding: 10px 14px;
-      border-radius: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .user {
-      background: #0066cc;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-    .assistant {
-      background: #333;
-      align-self: flex-start;
-      margin-right: auto;
-    }
-    .input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      background: #1a1a1a;
-      padding: 10px;
-      gap: 10px;
-    }
-    textarea {
-      flex: 1;
-      resize: none;
-      border: none;
-      border-radius: 20px;
-      padding: 10px;
-      background: #333;
-      color: white;
-      font-size: 16px;
-      min-height: 44px;
-      max-height: 120px;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 20px;
-      background: #0066cc;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    body { background: #111; color: #fff; font-family: sans-serif; margin: 0; }
+    .chat-container { padding: 20px; height: 80vh; overflow-y: auto; }
+    .message { margin: 10px 0; padding: 10px 15px; border-radius: 12px; max-width: 80%; }
+    .user { background: #0066cc; margin-left: auto; }
+    .assistant { background: #333; margin-right: auto; }
+    .input-area { position: fixed; bottom: 0; width: 100%; display: flex; padding: 10px; background: #000; }
+    textarea { flex: 1; background: #222; color: #fff; border: none; border-radius: 8px; padding: 10px; }
+    button { margin-left: 10px; background: #0066cc; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; }
   </style>
 </head>
 <body>
-  <div class="status" id="status">Connecting to Puter...</div>
   <div class="chat-container" id="chat"></div>
   <div class="input-area">
-    <textarea id="input" placeholder="Type a message..."></textarea>
+    <textarea id="input" placeholder="Ask Claude..."></textarea>
     <button onclick="sendMessage()">Send</button>
   </div>
 
   <script>
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const status = document.getElementById('status');
-    let isConnected = false;
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("input");
 
     function addMessage(role, content) {
-      const div = document.createElement('div');
+      const div = document.createElement("div");
       div.className = `message ${role}`;
       div.textContent = content;
       chat.appendChild(div);
@@ -106,17 +36,12 @@
     }
 
     async function sendMessage() {
-      if (!isConnected) {
-        status.textContent = 'Not connected';
-        return;
-      }
+      const text = input.value.trim();
+      if (!text) return;
 
-      const message = input.value.trim();
-      if (!message) return;
-
-      addMessage('user', message);
-      input.value = '';
-      status.textContent = 'Sending...';
+      addMessage("user", text);
+      input.value = "";
+      addMessage("assistant", "Thinking...");
 
       try {
         const res = await fetch("https://api.puter.com/v1/chat", {
@@ -125,53 +50,33 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4",
-            prompt: message
+            model: "claude-3-sonnet-20240229",
+            messages: [
+              { role: "user", content: text }
+            ]
           })
         });
 
-        const response = await res.json();
-
-        if (response?.text) {
-          addMessage('assistant', response.text);
-        } else {
-          addMessage('assistant', '[No response]');
-        }
-
-        status.textContent = 'Connected';
+        const data = await res.json();
+        document.querySelector(".assistant:last-child").remove(); // remove "Thinking..."
+        const reply = data?.choices?.[0]?.message?.content || "[No response]";
+        addMessage("assistant", reply);
       } catch (err) {
-        console.error('Error sending message:', err);
-        addMessage('assistant', '[Error sending message]');
-        status.textContent = 'Error';
-        setTimeout(() => (status.textContent = 'Connected'), 2000);
+        console.error(err);
+        addMessage("assistant", "[Error contacting Claude]");
       }
     }
 
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    window.addEventListener('load', async () => {
-      status.textContent = 'Connecting...';
+    window.onload = async () => {
       try {
         await puter.ready;
-
-        if (!puter.auth.isSignedIn()) {
-          await puter.auth.anonymous(); // Free guest login
-        }
-
-        isConnected = true;
-        status.textContent = 'Connected';
-        addMessage('assistant', 'Hello! Claude Sonnet is ready to chat.');
+        await puter.auth.anonymous();
+        addMessage("assistant", "Claude Sonnet is ready to chat.");
       } catch (err) {
-        console.error('Connection failed:', err);
-        status.textContent = 'Failed to connect to Puter';
-        addMessage('assistant', '[Initialization failed]');
+        addMessage("assistant", "[Failed to connect to Puter]");
+        console.error(err);
       }
-    });
+    };
   </script>
 </body>
 </html>
