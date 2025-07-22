@@ -29,6 +29,8 @@
       background: #222;
       border-radius: 8px;
       margin: 10px;
+      display: flex;
+      flex-direction: column;
     }
     .message {
       max-width: 85%;
@@ -117,9 +119,18 @@
       status.textContent = 'Sending...';
 
       try {
-        const response = await puter.ai.chat(message, {
-          model: 'claude-3-sonnet-20240229'
+        const res = await fetch("https://api.puter.com/v1/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4",
+            prompt: message
+          })
         });
+
+        const response = await res.json();
 
         if (response?.text) {
           addMessage('assistant', response.text);
@@ -149,7 +160,7 @@
         await puter.ready;
 
         if (!puter.auth.isSignedIn()) {
-          await puter.auth.anonymous(); // Use signIn() if you want account auth
+          await puter.auth.anonymous(); // Free guest login
         }
 
         isConnected = true;
