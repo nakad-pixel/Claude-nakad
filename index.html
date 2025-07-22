@@ -1,44 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude Sonnet Brain</title>
+  <title>Claude Chat (Mobile Optimized)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://js.puter.com/v2/"></script>
   <style>
-    body {
-      font-family: monospace;
+    * { box-sizing: border-box; }
+    body { background: #111; color: #fff; font-family: sans-serif; margin: 0; }
+    .chat-container {
+      padding: 10px;
+      height: 80vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px 14px;
+      border-radius: 14px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user { background: #0066cc; margin-left: auto; }
+    .assistant { background: #333; margin-right: auto; }
+    .input-area {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      background: #000;
+      padding: 10px;
+    }
+    textarea {
+      flex: 1;
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      margin-left: 10px;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    .status {
+      text-align: center;
+      font-size: 14px;
       background: #111;
-      color: #00ff88;
-      padding: 20px;
-      white-space: pre-wrap;
+      color: #aaa;
+      padding: 6px;
     }
   </style>
 </head>
 <body>
-  <h3>🤖 Claude Sonnet 4 - AI Brain Interface</h3>
-  <div id="output">Thinking...</div>
+  <div class="status" id="status">Connecting to Claude...</div>
+  <div class="chat-container" id="chat"></div>
+  <div class="input-area">
+    <textarea id="input" placeholder="Ask Claude..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("input");
+    const status = document.getElementById("status");
+    let isConnected = false;
 
-  <script>
-    const query = new URLSearchParams(window.location.search).get('q');
+    function addMessage(role, content) {
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      div.textContent = content;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-    async function askClaude(prompt) {
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text || !isConnected) return;
+
+      addMessage("user", text);
+      input.value = "";
+      status.textContent = "Sending...";
+      addMessage("assistant", "⏳ Claude is thinking...");
+
       try {
-        const result = await puter.ai.chat(prompt, {
-          model: "claude-sonnet-4", // You can also use "claude-3-7-sonnet" for faster replies
+        const result = await puter.ai.chat(text, {
+          model: "claude-sonnet-4",
           stream: false
         });
-        document.getElementById("output").innerText = result.message.content[0].text;
+
+        console.log("Claude response:", result);
+        document.querySelector(".assistant:last-child").remove();
+
+        const reply = result?.message?.content?.[0]?.text || "[No response]";
+        addMessage("assistant", reply);
+        status.textContent = "Connected to Claude ✅";
+
       } catch (err) {
-        document.getElementById("output").innerText = "❌ Error: " + err.message;
+        console.error("Error:", err);
+        document.querySelector(".assistant:last-child").remove();
+        addMessage("assistant", `[Error: ${err.message}]`);
+        status.textContent = "⚠️ Network or Claude error";
       }
     }
 
-    if (query) {
-      askClaude(query);
-    } else {
-      document.getElementById("output").innerText = "❓ Please add ?q=Your+Prompt to the URL.";
-    }
-  </script>
-</body>
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    window.onload = async () => {
+      try {
+        await puter.ready;
+        await puter.auth.anonymous();
+        isConnected = true;
+        status.textContent = "Connected to Claude ✅";
+        addMessage("assistant", "👋 Claude Sonnet is ready to chat!");
+      } catch (err) {
+        console.error("Initialization failed:", err);
+        addMessage("assistant", "[Failed to connect to Puter]");
+        status.textContent = "❌ Connection failed";
+      }
+    };
+  </script></body>
 </html>
