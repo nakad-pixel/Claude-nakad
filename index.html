@@ -4,22 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Claude Chat UI with Puter.js</title>
-  <!-- ✅ Load Puter.js SDK -->
+
+  <!-- ✅ Load Puter.js SDK v2 -->
   <script src="https://js.puter.com/v2/"></script>
+
   <style>
     /* ✅ Responsive, clean styling */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: #f4f4f4;
+      background: #f0f2f5;
     }
     .chat-container {
-      max-width: 600px;
+      max-width: 640px;
       margin: 40px auto;
-      background: #fff;
+      background: white;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       overflow: hidden;
     }
     .chat-header {
@@ -27,36 +29,38 @@
       color: white;
       padding: 16px;
       font-size: 1.2em;
+      text-align: center;
     }
     .chat-log {
       padding: 16px;
-      height: 300px;
+      height: 320px;
       overflow-y: auto;
       border-bottom: 1px solid #ddd;
     }
     .chat-input {
       display: flex;
       padding: 16px;
+      background: #f9f9f9;
     }
     .chat-input input {
-      flex: 1;
+      flex-grow: 1;
       padding: 10px;
       font-size: 1em;
-      border: 1px solid #ccc;
       border-radius: 4px;
+      border: 1px solid #ccc;
     }
     .chat-input button {
       margin-left: 8px;
       padding: 10px 16px;
       font-size: 1em;
-      background: #4a90e2;
-      color: white;
       border: none;
       border-radius: 4px;
+      background-color: #4a90e2;
+      color: white;
       cursor: pointer;
     }
     .chat-input button:hover {
-      background: #357ab8;
+      background-color: #3b77c4;
     }
     .message {
       margin-bottom: 12px;
@@ -73,7 +77,7 @@
 </head>
 <body>
   <div class="chat-container">
-    <div class="chat-header">Claude Chat (Powered by Puter.js)</div>
+    <div class="chat-header">Claude Chat (Sonnet 4 via Puter.js)</div>
     <div class="chat-log" id="chatLog"></div>
     <div class="chat-input">
       <input type="text" id="userInput" placeholder="Type your message..." />
@@ -82,10 +86,9 @@
   </div>
 
   <script>
-    // ✅ Reference to chat log container
     const chatLog = document.getElementById("chatLog");
 
-    // ✅ Function to append messages to chat log
+    // ✅ Append message to chat log with sender label
     function appendMessage(sender, text) {
       const message = document.createElement("div");
       message.className = "message";
@@ -94,23 +97,26 @@
       chatLog.scrollTop = chatLog.scrollHeight;
     }
 
-    // ✅ Main function to send message using Puter.js
+    // ✅ Send message to Claude Sonnet 4 via Puter.js
     async function sendMessage() {
       const input = document.getElementById("userInput");
       const userText = input.value.trim();
 
-      if (!userText) return;
+      if (!userText) return; // Ignore empty input
 
-      appendMessage("user", userText);
-      input.value = "";
+      appendMessage("user", userText); // Show user message
+      input.value = ""; // Clear input field
 
       try {
-        // ✅ Claude Sonnet 4 via Puter.js (frontend-only)
-        const response = await puter.ai.chat(userText);
-        appendMessage("ai", response);
+        // ✅ Force Claude Sonnet 4 model
+        const response = await puter.ai.chat(userText, {
+          model: "claude-sonnet-4"
+        });
+
+        appendMessage("ai", response); // Show Claude’s response
       } catch (error) {
         console.error("Error:", error);
-        appendMessage("ai", "⚠️ Sorry, something went wrong. Please try again.");
+        appendMessage("ai", "⚠️ Claude is currently unavailable. Please try again later.");
       }
     }
   </script>
