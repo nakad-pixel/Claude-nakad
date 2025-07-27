@@ -3,243 +3,179 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Claude-Nakad</title>
+  <title>AI Hub</title>
   <style>
     body {
       margin: 0;
-      background: #181818;
-      color: #f0f0f0;
       font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+      color: #fff;
     }
-    header {
-      padding: 12px 16px;
-      background: #1f1f1f;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #333;
+    .chat-container {
+      backdrop-filter: blur(10px);
+      background-color: rgba(26, 26, 26, 0.95);
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
     }
-    header h1 {
-      font-size: 1rem;
-      color: #00ffa2;
-      margin-right: auto;
+    .message.user {
+      background: linear-gradient(135deg, #0a84ff, #006ee6);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+   istant {
+      background-color: rgba(42, 42, 42, 0.8);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
     }
-    select, button {
-      background: #2a2a2a;
-      color: #f0f0f0;
+    .model-select {
+      margin: 10px 0;
+      background-color: #1a1a2e;
+      color: #fff;
       border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
+      padding: 10px;
+      border-radius: 5px;
     }
-    #model-info {
-      font-size: 0.85rem;
-      color: #00ffa2;
-      margin-left: 10px;
+    .capability-card {
+      border: 1px solid #444;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
     }
-    #status {
-      font-size: 0.8rem;
-      background: #00b894;
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-left: 6px;
+    .model-tag {
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 10px;
     }
-    #chat {
-      flex: 1;
-      padding: 14px;
-      overflow-y: auto;
+    ul#capability-list {
+      list-style: none;
+      padding-left: 0;
     }
-    #chat > div {
-      margin: 8px 0;
-      padding: 8px;
-      background: #262626;
-      border-radius: 6px;
-      white-space: pre-wrap;
+    ul#capability-list li {
+      margin: 4px 0;
     }
-    .user { background: #1e293b; }
-    .assistant { background: #212f3c; }
-    .system { background: #353535; font-style: italic; }
-    footer {
-      display: flex;
-      padding: 12px;
-      background: #1f1f1f;
-      border-top: 1px solid #333;
-    }
-    textarea {
-      flex: 1;
-      padding: 8px;
-      background: #2a2a2a;
-      color: #f0f0f0;
-      border: none;
-      border-radius: 4px;
-      resize: none;
-    }
-    #send-btn {
-      margin-left: 8px;
-    }
-    #fallback-panel {
-      display: none;
-      background: #202020;
-      padding: 12px;
-      border-top: 1px solid #333;
-    }
-    #fallback-panel input {
-      background: #333;
-      color: white;
-      border: none;
-      padding: 6px;
-      border-radius: 4px;
-    }
-    #prompt-editor {
-      display: none;
-      background: #202020;
-      padding: 12px;
-      border-top: 1px solid #333;
-    }
-    #prompt-editor textarea {
-      width: 100%;
-      padding: 6px;
-      background: #2a2a2a;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      resize: vertical;
-      margin-bottom: 6px;
+    .fas {
+      color: #0a84ff;
+      margin-right: 6px;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/puter.js@latest"></script>
 </head>
 <body>
-  <header>
-    <h1>Claude-Nakad</h1>
-    <select id="model-select">
-      <option>GPT-4o</option>
-      <option>Claude Sonnet 4</option>
-      <option>Claude Opus 4</option>
-      <option>Gemini 2.5 Flash</option>
-      <option>DeepSeek</option>
+  <div class="chat-container">
+    <h2>🔧 AI Hub</h2>
+    <select class="model-select" id="modelSelect" onchange="handleModelChange(this.value)">
+      <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+      <option value="gpt-4-vision">GPT-4 Vision</option>
+      <option value="llama-4-scout">LLaMA 4 Scout</option>
+      <option value="amazon-polly">Amazon Polly</option>
+      <option value="dall-e-3">DALL·E 3</option>
     </select>
-    <span id="model-info"></span>
-    <div id="status">🟢 Connected</div>
-    <button onclick="togglePrompt()">Prompt</button>
-    <button onclick="toggleFallback()">Fallback</button>
-  </header>
+    
+    <div id="model-capability-display" class="capability-card">
+      <div class="model-badge" id="active-model-badge"></div>
+      <ul id="capability-list"></ul>
+    </div>
 
-  <div id="chat"></div>
+    <div id="chatHistory">
+      <div class="message user">What’s today’s weather and a quote?</div>
+      <div class="message assistant" id="responseBlock">🌀 Awaiting model output...</div>
+    </div>
 
-  <div id="prompt-editor">
-    <textarea id="system-prompt" placeholder="Set system prompt..."></textarea>
-    <button onclick="savePrompt()">Save Prompt</button>
+    <div id="connection-status"></div>
+    <div id="memoryStatus"></div>
   </div>
 
-  <div id="fallback-panel">
-    <label>Fallback API Key:</label>
-    <input type="password" id="fallback-key" />
-    <button onclick="saveFallbackKey()">Save</button>
-  </div>
-
-  <footer>
-    <textarea id="user-input" rows="2" placeholder="Type your message..."></textarea>
-    <button id="send-btn">Send</button>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/puter-js@latest/dist/puter.min.js"></script>
   <script>
-    const models = {
-      "GPT-4o":            { info:"Multimodal, 128K context", model:"gpt-4o" },
-      "Claude Sonnet 4":   { info:"Balanced, 200K context", model:"claude-sonnet-4" },
-      "Claude Opus 4":     { info:"Deep reasoning, 200K", model:"claude-opus-4" },
-      "Gemini 2.5 Flash":  { info:"Fast, planning", model:"google/gemini-2.5-flash" },
-      "DeepSeek":          { info:"Strong coding", model:"deepseek-chat" }
+    const MODEL_INTEGRATION = {
+      "claude-3.5-sonnet": {
+        apiPattern: () => puter.ai.workflow("Get me today's weather + quote", {memory: 'persistent'}),
+        capabilities: ["JSON workflow generation", "200K context retention", "n8n optimization"],
+        badge: "<span class='model-tag sonnet-tag'>🚀 Workflow Architect</span>"
+      },
+      "gpt-4-vision": {
+        apiPattern: () => puter.ai.analyze(new Blob(), {model: 'gpt-4-vision'}),
+        capabilities: ["Image analysis", "Chart interpretation", "Multimodal reasoning"],
+        badge: "<span class='model-tag vision-tag'>👁️ Vision Expert</span>"
+      },
+      "llama-4-scout": {
+        apiPattern: () => puter.kv.set('full-context', 'docs').then(() => puter.ai.process('kvRef')),
+        capabilities: ["10M token capacity", "Codebase analysis", "Legal document processing"],
+        badge: "<span class='model-tag scout-tag'>📚 Context Master</span>"
+      },
+      "amazon-polly": {
+        apiPattern: () => puter.audio.synthesize("Hello world", {voice: 'Joanna', engine: 'neural'}),
+        capabilities: ["Natural TTS", "Emotion control", "Real-time streaming"],
+        badge: "<span class='model-tag tts-tag'>🔊 Speech Synthesis</span>"
+      },
+      "dall-e-3": {
+        apiPattern: () => puter.creatives.render("a futuristic nebula", {size: '1024x1024', style: 'vivid'}),
+        capabilities: ["Photorealistic images", "Inpainting/outpainting", "Style transfer"],
+        badge: "<span class='model-tag creative-tag'>🎨 Digital Artist</span>"
+      }
     };
 
-    let currentModel = localStorage.getItem("selectedModel") || "GPT-4o";
-    let fallbackKey = localStorage.getItem("fallback_api_key") || "";
-    let systemPrompt = localStorage.getItem("system_prompt") || "You are a helpful assistant.";
-
-    function updateModelInfo(name) {
-      currentModel = name;
-      localStorage.setItem("selectedModel", name);
-      document.getElementById("model-info").textContent = models[name].info;
-      document.getElementById("model-select").value = name;
-    }
-
-    function addMessage(role, text, append=false) {
-      const div = document.createElement("div");
-      div.className = role;
-      div.textContent = text;
-      document.getElementById("chat").appendChild(div);
-      document.getElementById("chat").scrollTop = chat.scrollHeight;
-    }
-
-    async function sendMessage(text) {
-      addMessage("user", text);
-      let failed = false;
-      document.getElementById("status").textContent = "⚡ Sending...";
-      try {
-        const stream = await puter.ai.chat(
-          [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text }
-          ],
-          { model: models[currentModel].model, stream: true }
-        );
-        let reply = "";
-        for await (const part of stream) {
-          if (part.text) {
-            reply += part.text;
-            addMessage("assistant", reply, true);
-          }
-        }
-        document.getElementById("status").textContent = "🟢 Connected";
-      } catch {
-        addMessage("system", `⚠️ ${currentModel} failed.`);
-        document.getElementById("status").textContent = "🔴 Offline";
-        failed = true;
+    const PUBLIC_APIS = {
+      weather: {
+        endpoint: "https://api.open-meteo.com/v1/forecast",
+        params: {latitude: 35.6895, longitude: 139.6917, hourly: "temperature_2m"},
+        display: "WeatherDataParser"
+      },
+      quotes: {
+        endpoint: "https://api.quotable.io/random",
+        params: {maxLength: 100},
+        display: "InspirationGenerator"
+      },
+      facts: {
+        endpoint: "https://uselessfacts.jsph.pl/api/v2/facts/random",
+        params: {language: "en"},
+        display: "KnowledgeEnhancer"
       }
-      if (failed) {
-        document.getElementById("fallback-panel").style.display = "block";
-      }
-    }
-
-    document.getElementById("send-btn").onclick = () => {
-      const input = document.getElementById("user-input");
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = "";
-      sendMessage(text);
     };
 
-    document.getElementById("model-select").onchange = (e) => {
-      updateModelInfo(e.target.value);
-    };
-
-    function togglePrompt() {
-      const panel = document.getElementById("prompt-editor");
-      panel.style.display = panel.style.display === "block" ? "none" : "block";
-      document.getElementById("system-prompt").value = systemPrompt;
+    function updateCapabilityDisplay(model) {
+      const { capabilities, badge } = MODEL_INTEGRATION[model];
+      document.getElementById('active-model-badge').innerHTML = badge;
+      const list = document.getElementById('capability-list');
+      list.innerHTML = capabilities.map(cap =>
+        "<li><i class='fas fa-check-circle'></i> " + cap + "</li>"
+      ).join('');
     }
 
-    function savePrompt() {
-      systemPrompt = document.getElementById("system-prompt").value;
-      localStorage.setItem("system_prompt", systemPrompt);
-      addMessage("system", "🧠 System prompt updated.");
+    function handleModelChange(selectedModel) {
+      updateCapabilityDisplay(selectedModel);
+      const responseEl = document.getElementById("responseBlock");
+      MODEL_INTEGRATION[selectedModel].apiPattern()?.then(res => {
+        responseEl.innerHTML = `<strong>🔧 AI Response:</strong> ${JSON.stringify(res)}`;
+      }).catch(() => {
+        responseEl.innerHTML = "⚠️ Failed to fetch AI response.";
+      });
+
+      // Public API parallel requests
+      Promise.all([
+        fetch(`${PUBLIC_APIS.weather.endpoint}?latitude=${PUBLIC_APIS.weather.params.latitude}&longitude=${PUBLIC_APIS.weather.params.longitude}&hourly=${PUBLIC_APIS.weather.params.hourly}`),
+        fetch(`${PUBLIC_APIS.quotes.endpoint}?maxLength=${PUBLIC_APIS.quotes.params.maxLength}`)
+      ])
+      .then(async ([weatherRes, quoteRes]) => {
+        const weatherData = await weatherRes.json();
+        const quoteData = await quoteRes.json();
+        responseEl.innerHTML += `<br><strong>${PUBLIC_APIS.weather.display}:</strong> ${JSON.stringify(weatherData)}<br><strong>${PUBLIC_APIS.quotes.display}:</strong> "${quoteData.content}" — ${quoteData.author}`;
+      });
     }
 
-    function toggleFallback() {
-      const panel = document.getElementById("fallback-panel");
-      panel.style.display = panel.style.display === "block" ? "none" : "block";
-    }
+    // Initial load
+    handleModelChange("claude-3.5-sonnet");
 
-    function saveFallbackKey() {
-      const key = document.getElementById("fallback-key").value;
-      if (key.length > 5) {
-        localStorage.setItem("fallback_api_key", key);
-        fallbackKey = key;
-        addMessage("system", "🔑 Fallback API Key saved.");
-        document.getElementById("fallback-panel").style.display = "none";
-      }
-    }
+    // Error-proofing
+    if (typeof puter === "undefined") enableDemoMode();
 
-    document.addEventListener("DOMContentLoaded",[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/lzh-yi/Web-Fork-/tree/024b3e55587afdf9f05a677613a75f24e3d1803e/03-CSS%E8%BF%9B%E9%98%B6%2F04-%E5%A6%82%E4%BD%95%E8%AE%A9%E4%B8%80%E4%B8%AA%E5%85%83%E7%B4%A0%E6%B0%B4%E5%B9%B3%E5%9E%82%E7%9B%B4%E5%B1%85%E4%B8%AD%EF%BC%9F.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
+    function enableDemoMode() {
+      document.getElementById("responseBlock").innerHTML = "💡 Puter.js not loaded — Demo Mode enabled.";
+    }
+  </script>
+</body>
+</html>
