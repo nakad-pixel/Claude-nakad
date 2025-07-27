@@ -1,181 +1,1484 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Hub</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      line-height: 1.6;
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
-      color: #fff;
-    }
-    .chat-container {
-      backdrop-filter: blur(10px);
-      background-color: rgba(26, 26, 26, 0.95);
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .message.user {
-      background: linear-gradient(135deg, #0a84ff, #006ee6);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-   istant {
-      background-color: rgba(42, 42, 42, 0.8);
-      border: 1px solid rgba(255,255,255,0.05);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .model-select {
-      margin: 10px 0;
-      background-color: #1a1a2e;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .capability-card {
-      border: 1px solid #444;
-      padding: 10px;
-      margin-top: 10px;
-      background-color: rgba(0, 0, 0, 0.4);
-      border-radius: 10px;
-    }
-    .model-tag {
-      font-weight: bold;
-      display: inline-block;
-      margin-bottom: 10px;
-    }
-    ul#capability-list {
-      list-style: none;
-      padding-left: 0;
-    }
-    ul#capability-list li {
-      margin: 4px 0;
-    }
-    .fas {
-      color: #0a84ff;
-      margin-right: 6px;
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/puter.js@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Pro - Claude 4, GPT & More</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #0a84ff;
+            --primary-dark: #006ee6;
+            --secondary: #00d4aa;
+            --dark: #0f0f0f;
+            --darker: #0a0a0a;
+            --dark-light: #1a1a2e;
+            --dark-lighter: #16213e;
+            --light: #e0e0e0;
+            --light-dark: #888;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --sonnet: #8a4fff;
+            --opus: #ff6b6b;
+            --haiku: #00c9a7;
+            --vision: #4d9de0;
+            --scout: #7cb518;
+            --tts: #ff6b6b;
+            --creative: #ff8e3c;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 50%, var(--dark-lighter) 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 25px;
+            background: rgba(10, 132, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--sonnet), var(--opus));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--light-dark);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status.connected {
+            background: var(--success);
+            color: white;
+        }
+        
+        .status.disconnected {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .status.loading {
+            background: var(--warning);
+            color: black;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 992px) {
+            .main-content {
+                grid-template-columns: 3fr 2fr;
+            }
+        }
+        
+        .chat-container {
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+        
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(17, 17, 17, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            margin-left: auto;
+            color: white;
+            border-top-right-radius: 5px;
+        }
+        
+        .message.assistant {
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-right: auto;
+            border-top-left-radius: 5px;
+        }
+        
+        .message.system {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid var(--warning);
+            margin: 0 auto;
+            max-width: 95%;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .message.api {
+            background: rgba(23, 162, 184, 0.2);
+            border: 1px solid var(--info);
+            margin: 0 auto;
+            max-width: 95%;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        .message-header {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .message-header i {
+            font-size: 0.9rem;
+        }
+        
+        .message-content {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        .typing-indicator {
+            display: none;
+            color: var(--sonnet);
+            font-style: italic;
+            text-align: center;
+            padding: 15px;
+            background: rgba(138, 79, 255, 0.1);
+        }
+        
+        .typing-indicator.active {
+            display: block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .controls-container {
+            background: rgba(26, 26, 26, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .memory-status {
+            background: rgba(23, 162, 184, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--info);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        select, textarea {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            background: rgba(34, 34, 34, 0.8);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sonnet);
+            box-shadow: 0 0 0 3px rgba(138, 79, 255, 0.2);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .memory-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--sonnet), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(138, 79, 255, 0.4);
+        }
+        
+        .btn-memory {
+            background: linear-gradient(135deg, var(--info), #138496);
+            color: white;
+        }
+        
+        .btn-export {
+            background: linear-gradient(135deg, var(--success), #218838);
+            color: white;
+        }
+        
+        .btn-clear {
+            background: linear-gradient(135deg, var(--danger), #c82333);
+            color: white;
+        }
+        
+        .btn-api {
+            background: linear-gradient(135deg, var(--creative), #ff6b6b);
+            color: white;
+        }
+        
+        .quick-functions h3 {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        
+        .function-btn {
+            background: rgba(138, 79, 255, 0.2);
+            border: 1px solid var(--sonnet);
+            color: var(--sonnet);
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .function-btn:hover {
+            background: rgba(138, 79, 255, 0.3);
+        }
+        
+        .model-info {
+            background: rgba(42, 42, 42, 0.6);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        /* Capability Display */
+        .capability-card {
+            background: rgba(42, 42, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .model-badge {
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        #capability-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #capability-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        #capability-list li:last-child {
+            border-bottom: none;
+        }
+        
+        #capability-list i {
+            color: var(--sonnet);
+            font-size: 0.9rem;
+        }
+        
+        /* Scrollbar styling */
+        .chat-history::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-history::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .chat-history::-webkit-scrollbar-thumb {
+            background: rgba(138, 79, 255, 0.5);
+            border-radius: 4px;
+        }
+        
+        .chat-history::-webkit-scrollbar-thumb:hover {
+            background: var(--sonnet);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .memory-controls {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .chat-container {
+                height: 60vh;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: rgba(220, 53, 69, 0.9);
+        }
+        
+        .code-block {
+            background: rgba(30, 30, 40, 0.8);
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .model-highlight {
+            background: linear-gradient(135deg, var(--sonnet), var(--opus));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        /* Model Tags */
+        .model-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .sonnet-tag {
+            background: var(--sonnet);
+        }
+        
+        .opus-tag {
+            background: var(--opus);
+        }
+        
+        .haiku-tag {
+            background: var(--haiku);
+        }
+        
+        .vision-tag {
+            background: var(--vision);
+        }
+        
+        .scout-tag {
+            background: var(--scout);
+        }
+        
+        .tts-tag {
+            background: var(--tts);
+        }
+        
+        .creative-tag {
+            background: var(--creative);
+        }
+        
+        /* Public API Controls */
+        .api-controls {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-top: 10px;
+        }
+        
+        .api-controls h3 {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="chat-container">
-    <h2>🔧 AI Hub</h2>
-    <select class="model-select" id="modelSelect" onchange="handleModelChange(this.value)">
-      <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-      <option value="gpt-4-vision">GPT-4 Vision</option>
-      <option value="llama-4-scout">LLaMA 4 Scout</option>
-      <option value="amazon-polly">Amazon Polly</option>
-      <option value="dall-e-3">DALL·E 3</option>
-    </select>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> AI Agent Pro</h1>
+            <p class="subtitle">Advanced AI Models with Memory & Public API Integration</p>
+            <div id="connection-status" class="status loading">
+                <i class="fas fa-sync fa-spin"></i> Connecting to Puter.ai...
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-container">
+                <div class="chat-history" id="chatHistory">
+                    <div class="message system">
+                        <div class="message-header">
+                            <i class="fas fa-info-circle"></i> System
+                        </div>
+                        <div class="message-content">
+                            💬 Conversation started. Memory is active - I'll remember our discussion!
+                        </div>
+                    </div>
+                    <div class="message system">
+                        <div class="message-header">
+                            <i class="fas fa-lightbulb"></i> Tip
+                        </div>
+                        <div class="message-content">
+                            Select different AI models to access specialized capabilities. Try our public API integrations!
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="typing-indicator" id="typing">
+                    <i class="fas fa-circle-notch fa-spin"></i> AI is thinking...
+                </div>
+            </div>
+            
+            <div class="controls-container">
+                <div class="memory-status" id="memoryStatus">
+                    <i class="fas fa-brain"></i> Memory: Active | Messages: 2 | Context: Ready
+                </div>
+                
+                <div class="control-group">
+                    <label><i class="fas fa-magic"></i> System Prompt Template</label>
+                    <select id="system">
+                        <option value="You are a helpful AI assistant that creates workflows and JSON. Maintain conversation context and remember previous messages.\n\nIf the user asks for a 'blueprint', 'n8n workflow', or 'JSON', respond with only valid, importable n8n JSON. If the user is asking a general question or brainstorming, respond in natural language with helpful, intelligent answers.">🔧 JSON Architect</option>
+                        <option value="You are an advanced AI assistant. Your purpose is to be helpful, harmless, and honest. You have enhanced reasoning capabilities. Remember the entire conversation history and use it to provide coherent, context-aware responses.">🧠 General Assistant</option>
+                        <option value="You are the most capable AI model. You excel at complex reasoning, creative tasks, and long-context understanding. Maintain awareness of the entire conversation history and build upon previous exchanges to provide the most helpful responses possible.">🏆 Complex Reasoning</option>
+                        <option value="You are a YouTube growth strategist with conversation memory. Provide actionable advice on content creation, SEO optimization, audience engagement, and monetization strategies. Remember previous discussions and build upon them.">📺 YouTube Growth Expert</option>
+                        <option value="You are a professional SEO specialist with memory. Help with keyword research, on-page optimization, technical SEO, and content strategy. Reference previous conversations when relevant.">🔍 SEO Master</option>
+                    </select>
+                    <button class="btn-primary" onclick="showCustomPromptModal()" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Add Custom Prompt
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <label><i class="fas fa-comment"></i> Your Message</label>
+                    <textarea id="userPrompt" placeholder="Chat naturally with AI! I'll remember our conversation...&#10;&#10;Examples:&#10;- Create a weather API workflow&#10;- Remember the Python script we discussed?&#10;- Build on that marketing strategy&#10;- Improve the code you wrote earlier"></textarea>
+                </div>
+                
+                <div class="control-group">
+                    <label><i class="fas fa-microchip"></i> AI Model</label>
+                    <select id="model" onchange="updateModelCapabilities()">
+                        <option value="claude-3.5-sonnet">Claude 3.5 Sonnet <span class="model-tag sonnet-tag">🚀</span></option>
+                        <option value="gpt-4-vision">GPT-4 Vision <span class="model-tag vision-tag">👁️</span></option>
+                        <option value="llama-4-scout">Llama 4 Scout <span class="model-tag scout-tag">📚</span></option>
+                        <option value="amazon-polly">Amazon Polly <span class="model-tag tts-tag">🔊</span></option>
+                        <option value="dall-e-3">DALL·E 3 <span class="model-tag creative-tag">🎨</span></option>
+                    </select>
+                    <div id="model-info" class="model-info">Claude 3.5 Sonnet - Advanced reasoning with 200K context window</div>
+                    
+                    <!-- Capability Display -->
+                    <div id="model-capability-display" class="capability-card">
+                        <div class="model-badge" id="active-model-badge"><span class="model-tag sonnet-tag">🚀 Workflow Architect</span></div>
+                        <ul id="capability-list">
+                            <li><i class="fas fa-check-circle"></i> JSON workflow generation</li>
+                            <li><i class="fas fa-check-circle"></i> 200K context retention</li>
+                            <li><i class="fas fa-check-circle"></i> n8n optimization</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="button-grid">
+                    <button id="sendBtn" class="btn-primary" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                    <button id="sendWithSystemBtn" class="btn-primary" onclick="sendWithSystemPrompt()">
+                        <i class="fas fa-bullseye"></i> Send with System Prompt
+                    </button>
+                </div>
+                
+                <div class="memory-controls">
+                    <button class="btn-memory" onclick="toggleMemory()">
+                        <i class="fas fa-brain"></i> Toggle Memory
+                    </button>
+                    <button class="btn-export" onclick="exportConversation()">
+                        <i class="fas fa-download"></i> Export Chat
+                    </button>
+                    <button class="btn-clear" onclick="clearMemory()">
+                        <i class="fas fa-trash"></i> Clear Memory
+                    </button>
+                </div>
+                
+                <div class="quick-functions">
+                    <h3><i class="fas fa-bolt"></i> Quick Functions</h3>
+                    <div class="function-grid">
+                        <button class="function-btn" onclick="addFunction('Create n8n workflow')">
+                            <i class="fas fa-bolt"></i> n8n
+                        </button>
+                        <button class="function-btn" onclick="addFunction('Explain')">
+                            <i class="fas fa-brain"></i> Explain
+                        </button>
+                        <button class="function-btn" onclick="addFunction('Write code for')">
+                            <i class="fas fa-code"></i> Code
+                        </button>
+                        <button class="function-btn" onclick="addFunction('Improve')">
+                            <i class="fas fa-wand-magic-sparkles"></i> Improve
+                        </button>
+                        <button class="function-btn" onclick="addFunction('Debug')">
+                            <i class="fas fa-bug"></i> Debug
+                        </button>
+                        <button class="function-btn" onclick="addFunction('Continue')">
+                            <i class="fas fa-arrow-right"></i> Continue
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Public API Controls -->
+                <div class="api-controls">
+                    <h3><i class="fas fa-plug"></i> Public API Integrations</h3>
+                    <div class="api-grid">
+                        <button class="btn-api" onclick="fetchWeatherData()">
+                            <i class="fas fa-cloud-sun"></i> Weather API
+                        </button>
+                        <button class="btn-api" onclick="fetchRandomQuote()">
+                            <i class="fas fa-quote-right"></i> Quotes API
+                        </button>
+                        <button class="btn-api" onclick="fetchRandomFact()">
+                            <i class="fas fa-lightbulb"></i> Facts API
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    <div id="model-capability-display" class="capability-card">
-      <div class="model-badge" id="active-model-badge"></div>
-      <ul id="capability-list"></ul>
+    <div id="notification" class="notification"></div>
+    
+    <!-- Custom Prompt Modal -->
+    <div class="modal-overlay" id="customPromptModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Custom System Prompt</h3>
+                <button class="close-modal" onclick="closeCustomPromptModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="customPrompt" placeholder="Enter your custom system prompt (max 300 characters)..." style="width: 100%; min-height: 150px;"></textarea>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #aaa;">This prompt will guide AI behavior for the conversation.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-clear" onclick="closeCustomPromptModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCustomPrompt()">Save Prompt</button>
+            </div>
+        </div>
     </div>
 
-    <div id="chatHistory">
-      <div class="message user">What’s today’s weather and a quote?</div>
-      <div class="message assistant" id="responseBlock">🌀 Awaiting model output...</div>
-    </div>
-
-    <div id="connection-status"></div>
-    <div id="memoryStatus"></div>
-  </div>
-
-  <script>
-    const MODEL_INTEGRATION = {
-      "claude-3.5-sonnet": {
-        apiPattern: () => puter.ai.workflow("Get me today's weather + quote", {memory: 'persistent'}),
-        capabilities: ["JSON workflow generation", "200K context retention", "n8n optimization"],
-        badge: "<span class='model-tag sonnet-tag'>🚀 Workflow Architect</span>"
+    <script>
+        // Global variables
+        let conversationHistory = [
+            {
+                role: "system",
+                content: "Conversation started. Memory is active - I'll remember our discussion!",
+                timestamp: new Date()
+            },
+            {
+                role: "system",
+                content: "Tip: Select different AI models to access specialized capabilities. Try our public API integrations!",
+                timestamp: new Date()
+            }
+        ];
+        let memoryEnabled = true;
+        let puterInitialized = false;
+        let currentModel = "claude-3.5-sonnet";
+        const MAX_CONTEXT_TOKENS = 150000; // Increased to 150K tokens
+        let lastRequestTime = 0;
+        
+        // AI Model Integration Matrix
+        const MODEL_INTEGRATION = {  
+            "claude-3.5-sonnet": {  
+                apiPattern: "puter.ai.workflow(prompt, {memory: 'persistent'})",  
+                capabilities: ["JSON workflow generation", "200K context retention", "n8n optimization"],  
+                badge: "<span class='model-tag sonnet-tag'>🚀 Workflow Architect</span>"  
+            },  
+            "gpt-4-vision": {  
+                apiPattern: "puter.ai.analyze(imageBlob, {model: 'gpt-4-vision'})",  
+                capabilities: ["Image analysis", "Chart interpretation", "Multimodal reasoning"],  
+                badge: "<span class='model-tag vision-tag'>👁️ Vision Expert</span>"  
+            },  
+            "llama-4-scout": {  
+                apiPattern: "puter.kv.set('full-context', docs).then(() => puter.ai.process(kvRef))",  
+                capabilities: ["10M token capacity", "Codebase analysis", "Legal document processing"],  
+                badge: "<span class='model-tag scout-tag'>📚 Context Master</span>"  
+            },  
+            "amazon-polly": {  
+                apiPattern: "puter.audio.synthesize(text, {voice: 'Joanna', engine: 'neural'})",  
+                capabilities: ["Natural TTS", "Emotion control", "Real-time streaming"],  
+                badge: "<span class='model-tag tts-tag'>🔊 Speech Synthesis</span>"  
+            },  
+            "dall-e-3": {  
+                apiPattern: "puter.creatives.render(prompt, {size: '1024x1024', style: 'vivid'})",  
+                capabilities: ["Photorealistic images", "Inpainting/outpainting", "Style transfer"],  
+                badge: "<span class='model-tag creative-tag'>🎨 Digital Artist</span>"  
+            }  
+        };
+        
+        // Public API Integration
+        const PUBLIC_APIS = {  
+            weather: {  
+                endpoint: "https://api.open-meteo.com/v1/forecast",  
+                params: {latitude: 35.6895, longitude: 139.6917, hourly: "temperature_2m"},  
+                display: "WeatherDataParser"  
+            },  
+            quotes: {  
+                endpoint: "https://api.quotable.io/random",  
+                params: {maxLength: 100},  
+                display: "InspirationGenerator"  
+            },  
+            facts: {  
+                endpoint: "https://uselessfacts.jsph.pl/api/v2/facts/random",  
+                params: {language: "en"},  
+                display: "KnowledgeEnhancer"  
+            }  
+        };
+        
+        // DOM Elements
+        const chatHistory = document.getElementById("chatHistory");
+        const statusEl = document.getElementById("connection-status");
+        const memoryStatusEl = document.getElementById("memoryStatus");
+        const typingEl = document.getElementById("typing");
+        const sendBtn = document.getElementById("sendBtn");
+        const sendWithSystemBtn = document.getElementById("sendWithSystemBtn");
+        const notificationEl = document.getElementById("notification");
+        const customPromptModal = document.getElementById("customPromptModal");
+        
+        // Initialize Puter connection
+        async function initializePuter() {
+            statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Connecting to Puter.ai...';
+            statusEl.className = "status loading";
+            
+            try {
+                // Check if puter is already loaded
+                if (typeof puter !== 'undefined') {
+                    puterInitialized = true;
+                    showNotification("✅ Connected to Puter.ai - AI Models Ready!", "success");
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected - AI Ready!';
+                    statusEl.className = "status connected";
+                    updateModelCapabilities();
+                    
+                    // Add welcome message
+                    setTimeout(() => {
+                        addMessageToUI("assistant", "Hello! I'm your AI assistant. Select a model to access specialized capabilities. How can I help you today?");
+                        conversationHistory.push({
+                            role: "assistant",
+                            content: "Hello! I'm your AI assistant. Select a model to access specialized capabilities. How can I help you today?",
+                            timestamp: new Date()
+                        });
+                        updateMemoryStatus();
+                    }, 1000);
+                    return;
+                }
+                
+                // Wait for puter to load
+                let attempts = 0;
+                const maxAttempts = 10;
+                const retryDelay = 1000;
+                
+                while (typeof puter === 'undefined' && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    attempts++;
+                    
+                    if (typeof puter !== 'undefined') {
+                        puterInitialized = true;
+                        showNotification("✅ Connected to Puter.ai - AI Models Ready!", "success");
+                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected - AI Ready!';
+                        statusEl.className = "status connected";
+                        updateModelCapabilities();
+                        
+                        // Add welcome message
+                        setTimeout(() => {
+                            addMessageToUI("assistant", "Hello! I'm your AI assistant. Select a model to access specialized capabilities. How can I help you today?");
+                            conversationHistory.push({
+                                role: "assistant",
+                                content: "Hello! I'm your AI assistant. Select a model to access specialized capabilities. How can I help you today?",
+                                timestamp: new Date()
+                            });
+                            updateMemoryStatus();
+                        }, 1000);
+                        return;
+                    }
+                }
+                
+                // If still not loaded after retries
+                throw new Error("Puter failed to load after " + maxAttempts + " attempts");
+                
+            } catch (error) {
+                console.error("Puter initialization error:", error);
+                showNotification("⚠️ Using Demo Mode - Limited Features", "error");
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Demo Mode - Limited Features';
+                statusEl.className = "status disconnected";
+                puterInitialized = false;
+                
+                // Add demo welcome message
+                setTimeout(() => {
+                    addMessageToUI("assistant", "Hello! I'm your AI assistant in demo mode. Full capabilities are available when connected to Puter.ai.");
+                    conversationHistory.push({
+                        role: "assistant",
+                        content: "Hello! I'm your AI assistant in demo mode. Full capabilities are available when connected to Puter.ai.",
+                        timestamp: new Date()
+                    });
+                    updateMemoryStatus();
+                }, 1000);
+            }
+        }
+        
+        // Show notification
+        function showNotification(message, type = "success") {
+            notificationEl.textContent = message;
+            notificationEl.className = "notification " + (type === "error" ? "error show" : "show");
+            
+            setTimeout(() => {
+                notificationEl.classList.remove("show");
+            }, 3000);
+        }
+        
+        // Update model capability display
+        function updateModelCapabilities() {
+            const model = document.getElementById("model").value;
+            const { capabilities, badge } = MODEL_INTEGRATION[model] || {
+                capabilities: ["General reasoning", "Text generation"],
+                badge: "<span class='model-tag'>🤖 AI Assistant</span>"
+            };
+            
+            document.getElementById("active-model-badge").innerHTML = badge;
+            
+            const list = document.getElementById("capability-list");
+            list.innerHTML = capabilities.map(cap => 
+                `<li><i class="fas fa-check-circle"></i> ${cap}</li>`
+            ).join('');
+            
+            const infoEl = document.getElementById("model-info");
+            infoEl.textContent = `${model.charAt(0).toUpperCase() + model.slice(1)} - ${capabilities[0]}`;
+            
+            currentModel = model;
+        }
+        
+        // Add message to chat history UI
+        function addMessageToUI(role, content, timestamp = new Date(), isStreaming = false) {
+            // Create new message element if not streaming
+            if (!isStreaming) {
+                const messageDiv = document.createElement("div");
+                messageDiv.className = `message ${role}`;
+                
+                const icon = role === "user" ? "fas fa-user" : 
+                            role === "assistant" ? "fas fa-robot" : 
+                            role === "api" ? "fas fa-plug" : "fas fa-info-circle";
+                
+                const headerDiv = document.createElement("div");
+                headerDiv.className = "message-header";
+                headerDiv.innerHTML = `<i class="${icon}"></i> ${role.charAt(0).toUpperCase() + role.slice(1)} • ${timestamp.toLocaleTimeString()}`;
+                
+                const contentDiv = document.createElement("div");
+                contentDiv.className = "message-content";
+                contentDiv.innerHTML = formatMessageContent(content);
+                
+                messageDiv.appendChild(headerDiv);
+                messageDiv.appendChild(contentDiv);
+                chatHistory.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+            // For streaming, update the last assistant message
+            else {
+                const lastMessage = chatHistory.lastElementChild;
+                if (lastMessage && lastMessage.classList.contains("assistant")) {
+                    const contentDiv = lastMessage.querySelector(".message-content");
+                    if (contentDiv) {
+                        contentDiv.innerHTML = formatMessageContent(content);
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+                    }
+                }
+            }
+        }
+        
+        // Helper function to format message content with code blocks
+        function formatMessageContent(content) {
+            if (content.includes("```")) {
+                const parts = content.split("```");
+                let formattedContent = '';
+                
+                parts.forEach((part, index) => {
+                    if (index % 2 === 1) {
+                        // This is a code block
+                        formattedContent += `<div class="code-block">${escapeHtml(part)}</div>`;
+                    } else {
+                        // Regular text
+                        formattedContent += escapeHtml(part).replace(/\n/g, '<br>');
+                    }
+                });
+                
+                return formattedContent;
+            } else {
+                return escapeHtml(content).replace(/\n/g, '<br>');
+            }
+        }
+        
+        // Helper function to escape HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // Update memory status
+        function updateMemoryStatus() {
+            const messageCount = conversationHistory.filter(msg => 
+                msg.role === "user" || msg.role === "assistant").length;
+                
+            const memoryStatusText = memoryEnabled ? "Active" : "Disabled";
+            const contextTokens = estimateTokens(conversationHistory);
+            
+            memoryStatusEl.innerHTML = `<i class="fas fa-${memoryEnabled ? 'brain' : 'ban'}"></i> Memory: ${memoryStatusText} | Messages: ${messageCount} | Context: ~${contextTokens} tokens`;
+        }
+        
+        // Estimate tokens in conversation history
+        function estimateTokens(history) {
+            return history.reduce((total, message) => {
+                // Rough estimate: 1 token ≈ 4 characters
+                return total + Math.ceil(message.content.length / 4);
+            }, 0);
+        }
+        
+        // Build context for AI
+        function buildContextPrompt() {
+            if (!memoryEnabled || conversationHistory.length <= 2) {
+                return "";
+            }
+            
+            const maxTokens = MAX_CONTEXT_TOKENS;
+            let tokenCount = 0;
+            let contextMessages = [];
+            
+            // Start from the most recent messages
+            for (let i = conversationHistory.length - 1; i >= 0; i--) {
+                const msg = conversationHistory[i];
+                
+                // Skip system messages for context
+                if (msg.role === "system") continue;
+                
+                const msgTokens = Math.ceil(msg.content.length / 4);
+                
+                if (tokenCount + msgTokens > maxTokens) {
+                    break;
+                }
+                
+                contextMessages.unshift(msg); // Add to beginning to maintain order
+                tokenCount += msgTokens;
+            }
+            
+            let context = "Conversation context:\n";
+            contextMessages.forEach(msg => {
+                context += `${msg.role}: ${msg.content}\n\n`;
+            });
+            
+            return context;
+        }
+        
+        // Show custom prompt modal
+        function showCustomPromptModal() {
+            document.getElementById("customPrompt").value = "";
+            customPromptModal.style.display = "flex";
+        }
+        
+        // Close custom prompt modal
+        function closeCustomPromptModal() {
+            customPromptModal.style.display = "none";
+        }
+        
+        // Save custom prompt
+        function saveCustomPrompt() {
+            const prompt = document.getElementById("customPrompt").value.trim();
+            if (!prompt) {
+                showNotification("⚠️ Please enter a prompt!", "error");
+                return;
+            }
+            
+            if (prompt.length > 300) {
+                showNotification("⚠️ Prompt too long! Max 300 characters.", "error");
+                return;
+            }
+            
+            const select = document.getElementById("system");
+            const option = document.createElement("option");
+            option.value = prompt;
+            option.textContent = "🎯 Custom: " + prompt.substring(0, 35) + (prompt.length > 35 ? "..." : "");
+            select.appendChild(option);
+            select.value = prompt;
+            
+            closeCustomPromptModal();
+            showNotification("✅ Custom prompt added successfully!", "success");
+        }
+        
+        // Add function to prompt
+        function addFunction(functionText) {
+            const promptArea = document.getElementById("userPrompt");
+            const currentText = promptArea.value.trim();
+            
+            if (currentText) {
+                promptArea.value = `${functionText}: ${currentText}`;
+            } else {
+                promptArea.value = `${functionText}: `;
+            }
+            promptArea.focus();
+            promptArea.setSelectionRange(promptArea.value.length, promptArea.value.length);
+        }
+        
+        // Send message with memory
+        async function sendMessage() {
+            const userPrompt = document.getElementById("userPrompt").value.trim();
+            
+            if (!userPrompt) {
+                showNotification("⚠️ Please enter a message!", "error");
+                return;
+            }
+            
+            // Add user message to history and UI
+            const userMessage = {
+                role: "user",
+                content: userPrompt,
+                timestamp: new Date()
+            };
+            
+            conversationHistory.push(userMessage);
+            addMessageToUI("user", userPrompt);
+            updateMemoryStatus();
+            
+            // Build prompt with context
+            const contextPrompt = buildContextPrompt();
+            const fullPrompt = contextPrompt + userPrompt;
+            
+            // Clear input
+            document.getElementById("userPrompt").value = "";
+            
+            // Send to AI
+            await sendToAI(fullPrompt, "with memory");
+        }
+        
+        // Send with system prompt
+        async function sendWithSystemPrompt() {
+            const userPrompt = document.getElementById("userPrompt").value.trim();
+            const systemPrompt = document.getElementById("system").value;
+            
+            if (!userPrompt) {
+                showNotification("⚠️ Please enter a message!", "error");
+                return;
+            }
+            
+            // Add user message to history and UI
+            const userMessage = {
+                role: "user",
+                content: userPrompt,
+                timestamp: new Date()
+            };
+            
+            conversationHistory.push(userMessage);
+            addMessageToUI("user", userPrompt);
+            updateMemoryStatus();
+            
+            // Build prompt with system prompt and context
+            const contextPrompt = buildContextPrompt();
+            const fullPrompt = `${systemPrompt}\n\n${contextPrompt}${userPrompt}`;
+            
+            // Clear input
+            document.getElementById("userPrompt").value = "";
+            
+            // Send to AI
+            await sendToAI(fullPrompt, "with system prompt and memory");
+        }
+        
+        // Core AI communication function
+        async function sendToAI(prompt, mode) {
+            // Throttle requests
+            const now = Date.now();
+            if (now - lastRequestTime < 1500) {
+                showNotification("⚠️ Please wait before sending another message", "error");
+                return;
+            }
+            lastRequestTime = now;
+            
+            // UI updates
+            sendBtn.disabled = true;
+            sendWithSystemBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+            sendWithSystemBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            typingEl.classList.add("active");
+            
+            // Create an empty assistant message for streaming
+            const assistantMessage = {
+                role: "assistant",
+                content: "",
+                timestamp: new Date()
+            };
+            conversationHistory.push(assistantMessage);
+            addMessageToUI("assistant", "▊", new Date(), true);
+            
+            let aiResponse = "";
+            
+            try {
+                if (!puterInitialized) {
+                    throw new Error("Puter.ai not available");
+                }
+                
+                // Use Puter.ai for real AI responses
+                const response = await puter.ai.chat(prompt, {
+                    model: currentModel,
+                    stream: true
+                });
+                
+                if (response && response.stream) {
+                    // Handle streaming response
+                    for await (const chunk of response.stream()) {
+                        if (chunk && chunk.delta && chunk.delta.text) {
+                            aiResponse += chunk.delta.text;
+                            assistantMessage.content = aiResponse;
+                            updateLastMessage(aiResponse);
+                        }
+                    }
+                } else if (response && response.text) {
+                    aiResponse = response.text;
+                    assistantMessage.content = aiResponse;
+                    updateLastMessage(aiResponse);
+                }
+                
+            } catch (error) {
+                console.error("AI request error:", error);
+                aiResponse = handleAIError(error, currentModel, prompt, mode);
+                assistantMessage.content = aiResponse;
+                updateLastMessage(aiResponse);
+            } finally {
+                // Reset UI
+                typingEl.classList.remove("active");
+                sendBtn.disabled = false;
+                sendWithSystemBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+                sendWithSystemBtn.innerHTML = '<i class="fas fa-bullseye"></i> Send with System Prompt';
+                
+                updateMemoryStatus();
+            }
+        }
+        
+        // Handle AI errors
+        function handleAIError(error, model, prompt, mode) {
+            if (error.message.includes("model not found")) {
+                showNotification(`⚠️ ${model} not available. Using Claude Sonnet`, "error");
+                return "⚠️ Model unavailable. Please try another model or check back later.";
+            }
+            return generateDemoResponse(prompt, model, mode);
+        }
+        
+        // Update last message during streaming
+        function updateLastMessage(content) {
+            const lastMessage = chatHistory.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains("assistant")) {
+                const contentDiv = lastMessage.querySelector(".message-content");
+                if (contentDiv) {
+                    contentDiv.innerHTML = formatMessageContent(content);
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                }
+            }
+        }
+        
+        // Generate demo response
+        function generateDemoResponse(prompt, model, mode) {
+            const lowerPrompt = prompt.toLowerCase();
+            
+            if (lowerPrompt.includes("json") || lowerPrompt.includes("n8n") || lowerPrompt.includes("workflow")) {
+                return `{
+  "name": "Weather API Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "url": "https://api.weatherapi.com/v1/current.json?key=YOUR_KEY&q=London",
+        "responseFormat": "json"
       },
-      "gpt-4-vision": {
-        apiPattern: () => puter.ai.analyze(new Blob(), {model: 'gpt-4-vision'}),
-        capabilities: ["Image analysis", "Chart interpretation", "Multimodal reasoning"],
-        badge: "<span class='model-tag vision-tag'>👁️ Vision Expert</span>"
+      "name": "Get Weather Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Format the weather data\\nconst data = $node['Get Weather Data'].json;\\nreturn {\\n  location: data.location.name,\\n  temp: data.current.temp_c,\\n  condition: data.current.condition.text\\n};"
       },
-      "llama-4-scout": {
-        apiPattern: () => puter.kv.set('full-context', 'docs').then(() => puter.ai.process('kvRef')),
-        capabilities: ["10M token capacity", "Codebase analysis", "Legal document processing"],
-        badge: "<span class='model-tag scout-tag'>📚 Context Master</span>"
-      },
-      "amazon-polly": {
-        apiPattern: () => puter.audio.synthesize("Hello world", {voice: 'Joanna', engine: 'neural'}),
-        capabilities: ["Natural TTS", "Emotion control", "Real-time streaming"],
-        badge: "<span class='model-tag tts-tag'>🔊 Speech Synthesis</span>"
-      },
-      "dall-e-3": {
-        apiPattern: () => puter.creatives.render("a futuristic nebula", {size: '1024x1024', style: 'vivid'}),
-        capabilities: ["Photorealistic images", "Inpainting/outpainting", "Style transfer"],
-        badge: "<span class='model-tag creative-tag'>🎨 Digital Artist</span>"
-      }
-    };
-
-    const PUBLIC_APIS = {
-      weather: {
-        endpoint: "https://api.open-meteo.com/v1/forecast",
-        params: {latitude: 35.6895, longitude: 139.6917, hourly: "temperature_2m"},
-        display: "WeatherDataParser"
-      },
-      quotes: {
-        endpoint: "https://api.quotable.io/random",
-        params: {maxLength: 100},
-        display: "InspirationGenerator"
-      },
-      facts: {
-        endpoint: "https://uselessfacts.jsph.pl/api/v2/facts/random",
-        params: {language: "en"},
-        display: "KnowledgeEnhancer"
-      }
-    };
-
-    function updateCapabilityDisplay(model) {
-      const { capabilities, badge } = MODEL_INTEGRATION[model];
-      document.getElementById('active-model-badge').innerHTML = badge;
-      const list = document.getElementById('capability-list');
-      list.innerHTML = capabilities.map(cap =>
-        "<li><i class='fas fa-check-circle'></i> " + cap + "</li>"
-      ).join('');
+      "name": "Process Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
     }
-
-    function handleModelChange(selectedModel) {
-      updateCapabilityDisplay(selectedModel);
-      const responseEl = document.getElementById("responseBlock");
-      MODEL_INTEGRATION[selectedModel].apiPattern()?.then(res => {
-        responseEl.innerHTML = `<strong>🔧 AI Response:</strong> ${JSON.stringify(res)}`;
-      }).catch(() => {
-        responseEl.innerHTML = "⚠️ Failed to fetch AI response.";
-      });
-
-      // Public API parallel requests
-      Promise.all([
-        fetch(`${PUBLIC_APIS.weather.endpoint}?latitude=${PUBLIC_APIS.weather.params.latitude}&longitude=${PUBLIC_APIS.weather.params.longitude}&hourly=${PUBLIC_APIS.weather.params.hourly}`),
-        fetch(`${PUBLIC_APIS.quotes.endpoint}?maxLength=${PUBLIC_APIS.quotes.params.maxLength}`)
-      ])
-      .then(async ([weatherRes, quoteRes]) => {
-        const weatherData = await weatherRes.json();
-        const quoteData = await quoteRes.json();
-        responseEl.innerHTML += `<br><strong>${PUBLIC_APIS.weather.display}:</strong> ${JSON.stringify(weatherData)}<br><strong>${PUBLIC_APIS.quotes.display}:</strong> "${quoteData.content}" — ${quoteData.author}`;
-      });
+  ],
+  "connections": {
+    "Get Weather Data": {
+      "main": [[{ "node": "Process Data", "type": "main", "index": 0 }]]
     }
+  }
+}
 
-    // Initial load
-    handleModelChange("claude-3.5-sonnet");
-
-    // Error-proofing
-    if (typeof puter === "undefined") enableDemoMode();
-
-    function enableDemoMode() {
-      document.getElementById("responseBlock").innerHTML = "💡 Puter.js not loaded — Demo Mode enabled.";
-    }
-  </script>
+This is a demo n8n workflow. In production with ${model}, I would remember our previous workflow discussions and build upon them!`;
+            }
+            
+            const memoryNote = conversationHistory.length > 3 ? 
+                `\n\n💭 I remember we've been discussing: ${conversationHistory.slice(-3).map(m => m.content.slice(0, 40)).join(", ")}...` : "";
+            
+            return `🤖 Demo Response from ${model}\n\nMode: ${mode}\nMemory enabled: ${memoryEnabled}\nContext messages: ${conversationHistory.length}\n\nThis is a demonstration response with conversation memory. In a real implementation with ${model}, I would:\n- Remember all our previous messages\n- Build upon previous discussions\n- Reference earlier code/workflows\n- Maintain conversation context\n\n${memoryNote}\n\nTo get real AI responses, ensure Puter.ai service is available and connected.`;
+        }
+        
+        // Memory management functions
+        function toggleMemory() {
+            memoryEnabled = !memoryEnabled;
+            updateMemoryStatus();
+            
+            const statusMessage = memoryEnabled ? 
+                "✅ Memory enabled - I'll remember our conversation!" :
+                "⚠️ Memory disabled - Each message will be independent.";
+            
+            addMessageToUI("system", statusMessage);
+            showNotification(memoryEnabled ? "🧠 Memory Enabled" : "⚠️ Memory Disabled");
+        }
+        
+        function clearMemory() {
+            if (confirm("Clear all conversation memory? This cannot be undone.")) {
+                conversationHistory = [
+                    {
+                        role: "system",
+                        content: "Memory cleared. Starting fresh conversation!",
+                        timestamp: new Date()
+                    }
+                ];
+                chatHistory.innerHTML = `
+                    <div class="message system">
+                        <div class="message-header">
+                            <i class="fas fa-info-circle"></i> System
+                        </div>
+                        <div class="message-content">
+                            🗑️ Memory cleared. Starting fresh conversation!
+                        </div>
+                    </div>
+                `;
+                updateMemoryStatus();
+                showNotification("🗑️ Conversation memory cleared", "success");
+            }
+        }
+        
+        function exportConversation() {
+            if (conversationHistory.length === 0) {
+                showNotification("⚠️ No conversation to export!", "error");
+                return;
+            }
+            
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                model: currentModel,
+                memoryEnabled: memoryEnabled,
+                messageCount: conversationHistory.length,
+                conversation: conversationHistory
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-conversation-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification("💾 Conversation exported successfully!", "success");
+        }
+        
+        // Public API Functions
+        async function fetchWeatherData() {
+            try {
+                const { endpoint, params } = PUBLIC_APIS.weather;
+                const url = new URL(endpoint);
+                Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Extract relevant data
+                const location = `Lat: ${params.latitude}, Lon: ${params.longitude}`;
+                const temps = data.hourly.temperature_2m.slice(0, 6);
+                
+                // Format message
+                const message = `🌤️ Current weather data:\nLocation: ${location}\nTemperatures (next 6 hours): ${temps.join(', ')}°C`;
+                
+                // Add to chat
+                addMessageToUI("api", message);
+                conversationHistory.push({
+                    role: "api",
+                    content: message,
+                    timestamp: new Date()
+                });
+                
+                updateMemoryStatus();
+                showNotification("🌤️ Weather data fetched successfully!");
+                
+            } catch (error) {
+                console.error("Weather API error:", error);
+                showNotification("⚠️ Failed to fetch weather data", "error");
+            }
+        }
+        
+        async function fetchRandomQuote() {
+            try {
+                const { endpoint, params } = PUBLIC_APIS.quotes;
+                const url = new URL(endpoint);
+                Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Format message
+                const message = `💬 "${data.content}"\n- ${data.author}`;
+                
+                // Add to chat
+                addMessageToUI("api", message);
+                conversationHistory.push({
+                    role: "api",
+                    content: message,
+                    timestamp: new Date()
+                });
+                
+                updateMemoryStatus();
+                showNotification("💬 Inspirational quote fetched!");
+                
+            } catch (error) {
+                console.error("Quote API error:", error);
+                showNotification("⚠️ Failed to fetch quote", "error");
+            }
+        }
+        
+        async function fetchRandomFact() {
+            try {
+                const { endpoint, params } = PUBLIC_APIS.facts;
+                const url = new URL(endpoint);
+                Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Format message
+                const message = `📚 Did you know?\n${data.text}`;
+                
+                // Add to chat
+                addMessageToUI("api", message);
+                conversationHistory.push({
+                    role: "api",
+                    content: message,
+                    timestamp: new Date()
+                });
+                
+                updateMemoryStatus();
+                showNotification("📚 Interesting fact retrieved!");
+                
+            } catch (error) {
+                console.error("Fact API error:", error);
+                showNotification("⚠️ Failed to fetch fact", "error");
+            }
+        }
+        
+        // Keyboard shortcuts
+        document.getElementById("userPrompt").addEventListener("keydown", function(event) {
+            if (event.ctrlKey && event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            } else if (event.shiftKey && event.key === "Enter") {
+                event.preventDefault();
+                sendWithSystemPrompt();
+            }
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            updateModelCapabilities();
+            updateMemoryStatus();
+            initializePuter();
+        });
+    </script>
 </body>
-</html>
+                                                                    </html>
