@@ -3,350 +3,243 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Agent Pro</title>
+  <title>Claude-Nakad</title>
   <style>
-    :root {
-      --bg: #121212;
-      --text: #f0f0f0;
-      --input-bg: #1e1e1e;
-      --accent: #00ff99;
-      --user-bg: #1f2937;
-      --assistant-bg: #243447;
-      --system-bg: #3b3b3b;
-      --modal-bg: rgba(0,0,0,0.8);
-      --modal-content: #1e1e1e;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: sans-serif;
+      margin: 0;
+      background: #181818;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
+      height: 100vh;
     }
     header {
+      padding: 12px 16px;
+      background: #1f1f1f;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: #181818;
+      gap: 10px;
       border-bottom: 1px solid #333;
     }
     header h1 {
-      font-size: 1.2rem;
-      color: var(--accent);
-      flex-shrink: 0;
+      font-size: 1rem;
+      color: #00ffa2;
+      margin-right: auto;
     }
     select, button {
-      background: var(--input-bg);
-      color: var(--text);
+      background: #2a2a2a;
+      color: #f0f0f0;
       border: none;
       padding: 6px 10px;
       border-radius: 4px;
-      cursor: pointer;
     }
     #model-info {
       font-size: 0.85rem;
-      color: var(--accent);
-      flex-grow: 1;
+      color: #00ffa2;
+      margin-left: 10px;
     }
-    main {
+    #status {
+      font-size: 0.8rem;
+      background: #00b894;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-left: 6px;
+    }
+    #chat {
       flex: 1;
-      padding: 12px;
+      padding: 14px;
       overflow-y: auto;
     }
+    #chat > div {
+      margin: 8px 0;
+      padding: 8px;
+      background: #262626;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+    .user { background: #1e293b; }
+    .assistant { background: #212f3c; }
+    .system { background: #353535; font-style: italic; }
     footer {
       display: flex;
       padding: 12px;
-      background: #181818;
+      background: #1f1f1f;
       border-top: 1px solid #333;
     }
-    input#user-input {
+    textarea {
       flex: 1;
       padding: 8px;
-      background: var(--input-bg);
-      color: var(--text);
+      background: #2a2a2a;
+      color: #f0f0f0;
       border: none;
       border-radius: 4px;
       resize: none;
     }
-    button#send-btn {
+    #send-btn {
       margin-left: 8px;
     }
-    .user, .assistant, .system {
-      margin: 8px 0;
-      padding: 8px;
-      border-radius: 4px;
-      white-space: pre-wrap;
-      position: relative;
-    }
-    .user { background: var(--user-bg); }
-    .assistant { background: var(--assistant-bg); }
-    .system { background: var(--system-bg); font-style: italic; }
-    .timestamp {
-      font-size: 0.7rem;
-      color: #888;
-      position: absolute;
-      top: 4px;
-      right: 8px;
-    }
-    .modal {
+    #fallback-panel {
       display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--modal-bg);
-      justify-content: center;
-      align-items: center;
+      background: #202020;
+      padding: 12px;
+      border-top: 1px solid #333;
     }
-    .modal.show { display: flex; }
-    .modal-content {
-      background: var(--modal-content);
-      padding: 20px;
-      border-radius: 6px;
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    #fallback-panel input {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 6px;
+      border-radius: 4px;
     }
-    .modal-content label {
-      font-size: 0.9rem;
-      color: var(--text);
+    #prompt-editor {
+      display: none;
+      background: #202020;
+      padding: 12px;
+      border-top: 1px solid #333;
     }
-    .modal-content input,
-    .modal-content textarea {
-      padding: 8px;
-      background: var(--input-bg);
-      color: var(--text);
+    #prompt-editor textarea {
+      width: 100%;
+      padding: 6px;
+      background: #2a2a2a;
+      color: white;
       border: none;
       border-radius: 4px;
-      width: 100%;
-    }
-    .modal-content textarea { resize: vertical; height: 80px; }
-    .modal-content .buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
+      resize: vertical;
+      margin-bottom: 6px;
     }
   </style>
 </head>
 <body>
-  <!-- Settings & API Key Modal -->
-  <div id="settings-modal" class="modal">
-    <div class="modal-content">
-      <label for="api-key">Enter API Key</label>
-      <input type="password" id="api-key" placeholder="sk-..." />
-      <label for="system-prompt">System Prompt</label>
-      <textarea id="system-prompt"></textarea>
-      <div class="buttons">
-        <button id="save-settings">Save</button>
-      </div>
-    </div>
-  </div>
-
   <header>
-    <h1>🧠 AI Agent Pro</h1>
-    <select id="model-select"></select>
+    <h1>Claude-Nakad</h1>
+    <select id="model-select">
+      <option>GPT-4o</option>
+      <option>Claude Sonnet 4</option>
+      <option>Claude Opus 4</option>
+      <option>Gemini 2.5 Flash</option>
+      <option>DeepSeek</option>
+    </select>
     <span id="model-info"></span>
-    <button id="privacy-btn">Privacy</button>
-    <button id="export-btn">Export</button>
-    <button id="open-settings">Settings</button>
+    <div id="status">🟢 Connected</div>
+    <button onclick="togglePrompt()">Prompt</button>
+    <button onclick="toggleFallback()">Fallback</button>
   </header>
 
-  <main id="chat"></main>
+  <div id="chat"></div>
+
+  <div id="prompt-editor">
+    <textarea id="system-prompt" placeholder="Set system prompt..."></textarea>
+    <button onclick="savePrompt()">Save Prompt</button>
+  </div>
+
+  <div id="fallback-panel">
+    <label>Fallback API Key:</label>
+    <input type="password" id="fallback-key" />
+    <button onclick="saveFallbackKey()">Save</button>
+  </div>
 
   <footer>
-    <textarea id="user-input" placeholder="Type your message…"></textarea>
+    <textarea id="user-input" rows="2" placeholder="Type your message..."></textarea>
     <button id="send-btn">Send</button>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/puter-js@latest/dist/puter.min.js"></script>
   <script>
-    // Model definitions
     const models = {
-      "GPT-4o":            { name:"GPT-4o", strengths:"Multimodal, 128K context", model:"gpt-4o" },
-      "GPT-4.1 Nano":      { name:"GPT-4.1 Nano", strengths:"Lightweight, short-tasks", model:"gpt-4.1-nano" },
-      "Claude Sonnet 4":   { name:"Claude Sonnet 4", strengths:"200K context, balanced", model:"claude-sonnet-4" },
-      "Claude Opus 4":     { name:"Claude Opus 4", strengths:"Deep reasoning, 200K", model:"claude-opus-4" },
-      "Gemini 2.5 Flash":  { name:"Gemini 2.5 Flash", strengths:"Fast planning", model:"google/gemini-2.5-flash" },
-      "LLaMA 3 Turbo":     { name:"LLaMA 3 Turbo", strengths:"Open-source, fast", model:"meta/llama-3-405b-turbo" },
-      "Mistral Codestral": { name:"Mistral Codestral", strengths:"Code-focused", model:"mistral/codestral" },
-      "DeepSeek":          { name:"DeepSeek", strengths:"Coding strength", model:"deepseek-chat" }
+      "GPT-4o":            { info:"Multimodal, 128K context", model:"gpt-4o" },
+      "Claude Sonnet 4":   { info:"Balanced, 200K context", model:"claude-sonnet-4" },
+      "Claude Opus 4":     { info:"Deep reasoning, 200K", model:"claude-opus-4" },
+      "Gemini 2.5 Flash":  { info:"Fast, planning", model:"google/gemini-2.5-flash" },
+      "DeepSeek":          { info:"Strong coding", model:"deepseek-chat" }
     };
 
     let currentModel = localStorage.getItem("selectedModel") || "GPT-4o";
-    let privacyMode = false;
-    let systemPrompt = localStorage.getItem("systemPrompt") || "You are a helpful assistant.";
-    let apiKey = localStorage.getItem("apiKey") || "";
+    let fallbackKey = localStorage.getItem("fallback_api_key") || "";
+    let systemPrompt = localStorage.getItem("system_prompt") || "You are a helpful assistant.";
 
-    // UI elements
-    const modelSelect = document.getElementById("model-select");
-    const modelInfo = document.getElementById("model-info");
-    const chatEl = document.getElementById("chat");
-    const inputEl = document.getElementById("user-input");
-    const sendBtn = document.getElementById("send-btn");
-    const privacyBtn = document.getElementById("privacy-btn");
-    const exportBtn = document.getElementById("export-btn");
-    const openSettingsBtn = document.getElementById("open-settings");
-    const settingsModal = document.getElementById("settings-modal");
-    const apiKeyInput = document.getElementById("api-key");
-    const systemPromptInput = document.getElementById("system-prompt");
-    const saveSettingsBtn = document.getElementById("save-settings");
-
-    // Populate model dropdown
-    Object.keys(models).forEach(key => {
-      const opt = document.createElement("option");
-      opt.value = key;
-      opt.textContent = models[key].name;
-      modelSelect.appendChild(opt);
-    });
-
-    function updateModelInfo(key) {
-      const info = models[key];
-      modelSelect.value = key;
-      modelInfo.textContent = `${info.name} – ${info.strengths}`;
-      localStorage.setItem("selectedModel", key);
-      currentModel = key;
+    function updateModelInfo(name) {
+      currentModel = name;
+      localStorage.setItem("selectedModel", name);
+      document.getElementById("model-info").textContent = models[name].info;
+      document.getElementById("model-select").value = name;
     }
 
-    function addMessage(role, text, append = false) {
-      const msg = document.createElement("div");
-      msg.className = role;
-      const ts = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-      msg.innerHTML = `<span class="timestamp">${ts}</span>${role==="user"?" 🧑":"🤖"} ${text}`;
-      if (append && chatEl.lastChild?.className === "assistant") {
-        chatEl.lastChild.innerHTML += text;
-      } else {
-        chatEl.appendChild(msg);
-        chatEl.scrollTop = chatEl.scrollHeight;
-      }
-    }
-
-    function showTyping() {
-      const t = document.createElement("div");
-      t.id = "typing-indicator";
-      t.className = "system";
-      t.textContent = "🤖 is thinking…";
-      chatEl.appendChild(t);
-      t.scrollIntoView();
-    }
-
-    function hideTyping() {
-      const t = document.getElementById("typing-indicator");
-      if (t) t.remove();
+    function addMessage(role, text, append=false) {
+      const div = document.createElement("div");
+      div.className = role;
+      div.textContent = text;
+      document.getElementById("chat").appendChild(div);
+      document.getElementById("chat").scrollTop = chat.scrollHeight;
     }
 
     async function sendMessage(text) {
-      const keys = Object.keys(models);
-      let idx = keys.indexOf(currentModel);
-      showTyping();
-      while (idx < keys.length) {
-        const key = keys[idx];
-        const mdl = models[key].model;
-        try {
-          const resp = await puter.ai.chat(
-            [
-              { role:"system", content: systemPrompt },
-              { role:"user", content: text }
-            ],
-            { model: mdl, stream: true }
-          );
-          hideTyping();
-          for await (const part of resp) {
-            if (part?.text) addMessage("assistant", part.text, true);
+      addMessage("user", text);
+      let failed = false;
+      document.getElementById("status").textContent = "⚡ Sending...";
+      try {
+        const stream = await puter.ai.chat(
+          [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: text }
+          ],
+          { model: models[currentModel].model, stream: true }
+        );
+        let reply = "";
+        for await (const part of stream) {
+          if (part.text) {
+            reply += part.text;
+            addMessage("assistant", reply, true);
           }
-          if (!privacyMode) saveChat();
-          return;
-        } catch {
-          hideTyping();
-          addMessage("system", `⚠️ ${models[key].name} failed. Switching to next model.`);
-          idx++;
-          if (idx < keys.length) updateModelInfo(keys[idx]);
-          showTyping();
         }
+        document.getElementById("status").textContent = "🟢 Connected";
+      } catch {
+        addMessage("system", `⚠️ ${currentModel} failed.`);
+        document.getElementById("status").textContent = "🔴 Offline";
+        failed = true;
       }
-      hideTyping();
-      addMessage("system", "❌ All models failed.");
-    }
-
-    function saveChat() {
-      localStorage.setItem("chatHistory", chatEl.innerHTML);
-    }
-
-    function loadChat() {
-      const saved = localStorage.getItem("chatHistory");
-      if (saved) chatEl.innerHTML = saved;
-      updateModelInfo(currentModel);
-    }
-
-    function exportChat() {
-      const text = Array.from(chatEl.children)
-        .map(div => div.textContent).join("\n");
-      const blob = new Blob([text], { type: "text/plain" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "chat.txt";
-      a.click();
-    }
-
-    function togglePrivacy() {
-      privacyMode = !privacyMode;
-      if (privacyMode) {
-        localStorage.removeItem("chatHistory");
-        addMessage("system", "🔒 Privacy ON: chat not saved.");
-      } else {
-        addMessage("system", "💾 Privacy OFF: chat will be saved.");
-        saveChat();
+      if (failed) {
+        document.getElementById("fallback-panel").style.display = "block";
       }
     }
 
-    function openSettings() {
-      apiKeyInput.value = apiKey;
-      systemPromptInput.value = systemPrompt;
-      settingsModal.classList.add("show");
+    document.getElementById("send-btn").onclick = () => {
+      const input = document.getElementById("user-input");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      sendMessage(text);
+    };
+
+    document.getElementById("model-select").onchange = (e) => {
+      updateModelInfo(e.target.value);
+    };
+
+    function togglePrompt() {
+      const panel = document.getElementById("prompt-editor");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+      document.getElementById("system-prompt").value = systemPrompt;
     }
 
-    function saveSettings() {
-      apiKey = apiKeyInput.value.trim();
-      systemPrompt = systemPromptInput.value.trim() || "You are a helpful assistant.";
-      localStorage.setItem("apiKey", apiKey);
-      localStorage.setItem("systemPrompt", systemPrompt);
-      puter.ai.apiKey = apiKey;
-      settingsModal.classList.remove("show");
-      addMessage("system", "⚙️ Settings updated.");
+    function savePrompt() {
+      systemPrompt = document.getElementById("system-prompt").value;
+      localStorage.setItem("system_prompt", systemPrompt);
+      addMessage("system", "🧠 System prompt updated.");
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // Require API key before using
-      if (!apiKey) openSettings();
-      else puter.ai.apiKey = apiKey;
+    function toggleFallback() {
+      const panel = document.getElementById("fallback-panel");
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
 
-      loadChat();
+    function saveFallbackKey() {
+      const key = document.getElementById("fallback-key").value;
+      if (key.length > 5) {
+        localStorage.setItem("fallback_api_key", key);
+        fallbackKey = key;
+        addMessage("system", "🔑 Fallback API Key saved.");
+        document.getElementById("fallback-panel").style.display = "none";
+      }
+    }
 
-      modelSelect.addEventListener("change", e => updateModelInfo(e.target.value));
-      sendBtn.addEventListener("click", () => {
-        const txt = inputEl.value.trim();
-        if (!txt) return;
-        addMessage("user", txt);
-        if (!privacyMode) saveChat();
-        sendMessage(txt);
-        inputEl.value = "";
-      });
-
-      inputEl.addEventListener("keydown", e => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendBtn.click();
-        }
-      });
-
-      privacyBtn.addEventListener("click", togglePrivacy);
-      exportBtn.addEventListener("click", exportChat);
-      openSettingsBtn.addEventListener("click", openSettings);
-      saveSettingsBtn.addEventListener("click", saveSettings);
-    });
-  </script>
-</body>
-</html>
+    document.addEventListener("DOMContentLoaded",[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/lzh-yi/Web-Fork-/tree/024b3e55587afdf9f05a677613a75f24e3d1803e/03-CSS%E8%BF%9B%E9%98%B6%2F04-%E5%A6%82%E4%BD%95%E8%AE%A9%E4%B8%80%E4%B8%AA%E5%85%83%E7%B4%A0%E6%B0%B4%E5%B9%B3%E5%9E%82%E7%9B%B4%E5%B1%85%E4%B8%AD%EF%BC%9F.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
